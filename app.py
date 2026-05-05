@@ -15,18 +15,31 @@ def get_db_connection():
 def home():
     return render_template('INDEX.html')
 
-# 2. API สำหรับให้ JavaScript ดึงข้อมูลผู้ใช้งาน
-@app.route('/api/users', methods=['GET'])
-def get_users():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT username, password, fullname, role, TO_CHAR(expire_date, 'YYYY-MM-DD') FROM users")
-    rows = cursor.fetchall()
-    conn.close()
-    
-    users = [{"user": r[0], "pass": r[1], "name": r[2], "role": r[3], "expire_date": r[4]} for r in rows]
-    return jsonify(users)
-
-if __name__ == '__main__':
-    # รันเว็บเซิร์ฟเวอร์ในเครื่องเพื่อทดสอบ
-    app.run(host='0.0.0.0', port=5000, debug=True)
+# API บันทึกข้อมูล User (จากหน้า Admin)
+@app.route('/api/users', methods=['POST'])
+def save_users():
+    conn = None
+    cursor = None
+    try:
+        new_users_list = request.json
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM users")
+        
+        for u in new_users_list:
+            expire = u.get('expire_date', '2099-12-31')
+            if not expire: expire = '2099-12-31'
+            cursor.execute('''
+                INSERT INTO users (username, password, fullname, role, expire_date) 
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (u['user'], u['pass'], u['name'], u['role'], expire))
+            
+        conn.commit()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        if conn: conn.rollback()
+        return jsonify({"status": "error", "message": str(e)})
+    finally:
+        # บังคับปิดการเชื่อมต่อทุกครั้ง ป้องกัน Neon DB ค้าง
+        if cursor: cursor.close()
+        if conn: conn.close()
