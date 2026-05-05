@@ -1208,6 +1208,7 @@
 
     function adminRemoveRow(btn) { btn.parentElement.parentElement.remove(); }
 
+    // 2️⃣ แก้ไข adminSaveUsers ให้ส่งข้อมูลผ่าน Web API และแสดง Error ชัดเจน
     function adminSaveUsers() {
         try {
             const rows = document.getElementById('admin-user-body').querySelectorAll('tr'); 
@@ -1225,14 +1226,26 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newDB)
-            }).then(res => res.json()).then(response => {
+            })
+            .then(async res => {
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${errText}`);
+                }
+                return res.json();
+            })
+            .then(response => {
                 if(response.status === "success") {
                     userDatabase = newDB; 
                     const msg = document.getElementById('admin_save_msg'); 
                     msg.style.display = 'block'; 
                     setTimeout(() => { msg.style.display = 'none'; }, 3000);
                 } else { alert("❌ API Error: " + response.message); }
-            }).catch(e => alert("❌ Network Connection Error"));
+            })
+            .catch(e => {
+                console.error(e);
+                alert("❌ พบข้อผิดพลาดการเชื่อมต่อ: " + e.message.substring(0, 150) + "\n(เช็ค Logs ของ Render หรือลองกดบันทึกใหม่อีกครั้ง)");
+            });
         } catch(e) { alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูลจากตาราง"); }
     }
 
