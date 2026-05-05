@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chakrit WellGrow ERP - Enterprise OS</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root { 
+            --primary: #0F172A; --secondary: #334155; --gold: #D4AF37; --gold-light: #FDE68A;    
+            --success: #10B981; --danger: #EF4444; --warning: #F59E0B; --bg-color: #F8FAFC;      
+            --card-bg: #FFFFFF; --border: #E2E8F0; --text-main: #1E293B;
+            --tech: #0891B2; --ai: #059669; --qc: #7C3AED; --om: #4F46E5; --admin: #475569;
+        }
+
+        body { font-family: 'Prompt', sans-serif; background: var(--bg-color); margin: 0; padding: 0; font-size: 14px; color: var(--text-main); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+        .nav-tabs { display: flex; background: var(--primary); color: white; position: sticky; top: 0; z-index: 9000; box-shadow: 0 4px 20px rgba(0,0,0,0.1); flex-wrap: wrap; border-bottom: 2px solid var(--gold); }
+        .tab { padding: 12px 4px; cursor: pointer; border-bottom: 4px solid transparent; transition: all 0.3s ease; font-weight: 500; font-size: 0.78em; flex: 1; text-align: center; }
+        .tab.active { background: var(--card-bg); color: var(--primary); border-bottom: 4px solid var(--gold); font-weight: 700; }
+        .tab:hover:not(.active) { background: rgba(212, 175, 55, 0.15); color: var(--gold); }
+        .tab-color-tech { border-left: 1px solid rgba(255,255,255,0.05); }
+        .tab-color-doc { background: #1E3A8A; color: white; border-left: 1px solid rgba(255,255,255,0.1); }
+        .tab-color-money { background: #064E3B; color: white; border-left: 1px solid rgba(255,255,255,0.1); }
+        .tab-color-admin { background: var(--admin); color: var(--gold-light); border-left: 2px solid var(--gold); }
+
+        .container { max-width: 1500px; margin: 40px auto; background: transparent; padding: 0 20px; }
+        .page { display: none; animation: fadeUp 0.5s ease; } .page.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 25px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 35px; margin-bottom: 25px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card:hover { box-shadow: 0 15px 50px -10px rgba(0,0,0,0.08); }
+        .card h3 { color: var(--primary); border-left: 5px solid var(--gold); padding-left: 15px; margin-top: 0; margin-bottom: 25px; font-size: 1.35em; font-weight: 600; }
+
+        .project-header { background: linear-gradient(135deg, var(--primary) 0%, #1E293B 100%); color: white; padding: 35px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); border: 1px solid rgba(212, 175, 55, 0.2); }
+        .project-header label { color: var(--gold-light); font-size: 0.95em; font-weight: 400; text-transform: uppercase; }
+        .project-header input { background: rgba(255,255,255,0.95); border: 2px solid transparent; color: var(--primary); font-weight: 700; font-size: 1.2em; width: 100%; padding: 12px 15px; border-radius: 8px; margin-top: 8px; box-sizing: border-box; }
+        .project-header input:focus { border-color: var(--gold); outline: none; }
+
+        .save-bar { background: var(--card-bg); border: 1px solid var(--border); padding: 20px 30px; border-radius: 16px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .sys-status { font-weight: 600; color: var(--success); display: flex; align-items: center; gap: 8px; padding: 6px 16px; background: rgba(16, 185, 129, 0.1); border-radius: 20px; font-size: 0.95em;} 
+        .print-timestamp { display: none; text-align: right; font-size: 0.9em; color: #64748B; margin-bottom: 10px; font-weight: 500; }
+
+        .math-box { background: #0F172A; color: #38BDF8; padding: 25px; border-radius: 12px; font-family: 'JetBrains Mono', monospace; line-height: 1.9; border-left: 5px solid var(--gold); overflow-x: auto; white-space: pre-wrap; margin-bottom: 25px; font-size: 0.95em; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); }
+        .spec-desc { background: #F8FAFC; padding: 18px; border-radius: 8px; font-size: 0.95em; color: #475569; border: 1px solid #E2E8F0; margin-bottom: 25px; line-height: 1.7; border-left: 4px solid var(--secondary); }
+
+        label { display: block; font-weight: 500; margin-top: 18px; color: var(--secondary); font-size: 0.95em; }
+        input[type="number"], input[type="text"], input[type="password"], input[type="date"], select { width: 100%; padding: 12px 16px; border: 1px solid #CBD5E1; border-radius: 8px; margin-top: 8px; font-size: 1em; box-sizing: border-box; background: #FFFFFF; font-family: 'Prompt', sans-serif; color: var(--text-main); }
+        input:focus, select:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15); }
+        textarea { width: 100%; padding: 16px; border: 1px dashed var(--gold); border-radius: 8px; margin-top: 8px; font-size: 1em; box-sizing: border-box; font-family: 'Prompt', sans-serif; background: #FFFBEB; resize: vertical; min-height: 100px; line-height: 1.6; }
+        textarea:focus { border-style: solid; outline: none; }
+
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95em; font-family: 'Prompt', sans-serif; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
+        .btn-calc { background: var(--primary); color: var(--gold); border: 1px solid var(--gold); width: 100%; font-size: 1.1em; margin-bottom: 20px; } 
+        .btn-update { background: var(--gold); color: var(--primary); margin-bottom: 15px; font-weight: 700; }
+        .btn-auto { background: var(--secondary); color: white; width: 100%; margin-top: 15px; }
+        .btn-del { background: #FEE2E2; color: var(--danger); padding: 8px 15px; border-radius: 6px; border: 1px solid #FECACA; font-size: 0.85em; } 
+        .btn-export { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; } 
+        .btn-print { background: #F1F5F9; color: #334155; border: 1px solid #CBD5E1; margin-bottom: 15px; } 
+        .btn-logout { background: #FEE2E2; color: var(--danger); border: 1px solid #FECACA; } 
+        .btn-help { background: linear-gradient(135deg, var(--gold) 0%, #B8860B 100%); color: var(--primary); border: 2px solid #FFF; font-size:1.05em;}
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+        th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 16px 14px; text-align: left; }
+        th { background: #F8FAFC; font-weight: 600; color: var(--secondary); text-transform: uppercase; font-size: 0.85em; }
+        td:last-child, th:last-child { border-right: none; }
+        tr:last-child td { border-bottom: none; }
+        
+        .editable-input { background: var(--bg-color) !important; border: 1px dashed var(--gold) !important; text-align: center; font-weight: 600; width: 100% !important; margin: 0; padding: 10px; color: var(--primary); }
+        .editable-item-name { background: transparent !important; border: 1px dashed transparent !important; text-align: left; padding: 8px; width: 100% !important; margin: 0; transition: all 0.3s;}
+        .editable-item-name:hover { border-color: var(--gold) !important; background: #F8FAFC !important; }
+        .qty-input { width: 110px !important; display: inline-block; }
+        
+        .inline-warn { color: var(--danger); font-size: 0.85em; font-weight: 500; margin-top: 6px; display: block; min-height: 20px; }
+        .inline-sugg { color: var(--primary); font-size: 0.95em; font-weight: 500; margin-top: 6px; display: block; background: var(--gold-light); padding: 12px; border-radius: 8px; border: 1px solid var(--gold); }
+        .svg-container { text-align: center; background: #FFFFFF; padding: 25px; border: 1px solid var(--border); border-radius: 12px; margin-top: 15px; min-height: 150px; display: flex; align-items: center; justify-content: center; }
+        .yield-winner { background: #ECFDF5 !important; font-weight: 600; color: var(--success); }
+        .editable-report-field { border-bottom: 1px dashed #94A3B8; min-width: 50px; display: inline-block; outline: none; padding: 2px 6px; transition: 0.3s; cursor: text; }
+        .editable-report-field:focus { background: #FEF3C7; border-bottom: 1px solid var(--warning); }
+        
+        .quote-container { background: white; padding: 60px; border: none; box-shadow: 0 20px 50px rgba(0,0,0,0.06); border-radius: 16px;}
+        .quote-header-box { display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 25px; margin-bottom: 35px; }
+        .quote-logo h1 { color: var(--primary); margin: 0; font-size: 2.2em; letter-spacing: 2px; font-weight: 700; text-transform: uppercase; }
+        .quote-details { text-align: right; } .quote-details h2 { margin: 0; color: var(--gold); letter-spacing: 1px;}
+        .quote-meta { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 25px; background: #F8FAFC; padding: 25px; border-radius: 12px; border: 1px solid var(--border); }
+        .quote-table th { background: var(--primary); color: var(--gold); border: none; }
+        .quote-summary-box { float: right; width: 420px; margin-top: 30px; background: #F8FAFC; padding: 25px; border-radius: 12px; border: 1px solid var(--border); } 
+        .quote-summary-box table { margin: 0; border: none; }
+        .quote-summary-box th, .quote-summary-box td { border: none; padding: 10px 12px; }
+        .quote-summary-box th { background: transparent; color: var(--secondary); text-align: left; } .quote-summary-box td { text-align: right; font-weight: 600; }
+        .quote-grand-total { font-size: 1.6em; color: var(--primary); border-top: 2px solid var(--gold); padding-top: 15px !important; }
+        .quote-terms { margin-top: 50px; font-size: 0.95em; color: #475569; background: #FFFFFF; padding: 25px; border-left: 4px solid var(--gold); border-radius: 0 8px 8px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+        .signature-area { display: flex; justify-content: space-around; margin-top: 80px; text-align: center; }
+        .sign-box { border-top: 1px solid var(--text-main); width: 280px; padding-top: 15px; margin-top: 60px; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card-bg); width: 80%; max-width: 800px; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.2); }
+        .modal-header { background: var(--primary); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); }
+        .modal-header h2 { margin: 0; color: var(--gold); font-size: 1.4em; font-weight: 600;}
+        .modal-close { background: transparent; border: none; color: white; font-size: 1.5em; cursor: pointer; transition: 0.3s; } .modal-close:hover { color: var(--danger); transform: scale(1.1);}
+        .modal-body { padding: 35px; overflow-y: auto; font-size: 1.05em; line-height: 1.8; color: var(--text-main); }
+
+        /* 🖨️ NATIVE PRINT CSS SYSTEM */
+        @media print { 
+            @page { margin: 15mm 10mm; size: auto; }
+            body, html { height: auto !important; overflow: visible !important; background: white !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 12px !important; }
+            .nav-tabs, .save-bar, .btn, .no-print, .edit-hint, #login-overlay, .modal-overlay, input[type="file"] { display: none !important; } 
+            .container { width: 100% !important; max-width: 100% !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; border: none !important; display: block !important; box-sizing: border-box !important; }
+            .page { display: none !important; } .page.active { display: block !important; padding-top: 0; margin-bottom: 0; }
+            .card { page-break-inside: avoid; break-inside: avoid; border: 1px solid #CBD5E1 !important; box-shadow: none !important; padding: 20px !important; margin-bottom: 20px !important; width: 100% !important; box-sizing: border-box !important; }
+            table, tr, td, th { page-break-inside: avoid; break-inside: avoid; }
+            input, select, textarea { border: none !important; background: transparent !important; color: #000 !important; appearance: none; -webkit-appearance: none; font-weight: bold; padding: 0 !important; box-shadow: none !important; max-width: 100% !important; }
+            .editable-report-field { border: none !important; background: transparent !important; }
+            .project-header { background: white !important; color: black !important; border: 2px solid #0F172A !important; box-shadow: none !important; padding: 20px !important; border-radius: 0 !important; width: 100% !important; box-sizing: border-box !important; }
+            .project-header h2 { color: #0F172A !important; margin-bottom: 10px !important; }
+            .project-header label { color: #475569 !important; font-weight: 600 !important; }
+            .project-header input { color: #000 !important; border: none !important; border-bottom: 1px dashed #94A3B8 !important; border-radius: 0 !important; padding: 5px 0 !important; background: transparent !important; }
+            .quote-container { padding: 20px !important; } .quote-summary-box { width: 50% !important; float: right; }
+        }
+
+        @media print {
+            .printing-nameplate body { background: white; }
+            .printing-nameplate .project-header, .printing-nameplate .print-timestamp { display: none !important; }
+            .printing-nameplate .page { display: none !important; }
+            .printing-nameplate #p2 { display: block !important; border: none; padding:0; margin:0; }
+            .printing-nameplate #p2 > *:not(.nameplate-section) { display: none !important; }
+            .printing-nameplate .nameplate-section { display: block !important; border:none; margin:0; padding:0; width:100%; height:auto; box-shadow:none; }
+            .printing-nameplate .nameplate-section > *:not(.nameplate-content) { display: none !important; }
+            .printing-nameplate .nameplate-content { border: 2px solid #000 !important; border-radius: 0; box-shadow: none; width: 80% !important; max-width: none; background: white !important; margin: 0 auto; padding: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="manual-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📖 คู่มือการใช้งานระบบและข้อกำหนดการออกแบบ</h2>
+            <button class="modal-close" onclick="document.getElementById('manual-modal').style.display='none'">✖</button>
+        </div>
+        <div class="modal-body">
+            <h4 style="color: var(--secondary); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-top: 10px;">📋 ข้อกำหนดและการออกแบบ (Design Standards):</h4>
+            <ul>
+                <li><b>Mechanical:</b> อ้างอิงมาตรฐาน ASME Section VIII Division 1 สำหรับการคำนวณความหนาถังรับแรงดัน</li>
+                <li><b>Structural:</b> การออกแบบโครงสร้างขารองรับและฐานรากอ้างอิงตามมาตรฐาน AISC</li>
+                <li><b>Process:</b> ระบบกระจายน้ำ (Drilled Laterals) และอัตราการล้างย้อน (35 m/h) อ้างอิงมาตรฐาน AWWA B100</li>
+                <li><b>วัสดุ (Materials):</b> รองรับเหล็กคาร์บอน (SS400, A36, A516) และสแตนเลส (SUS304, SUS316L)</li>
+            </ul>
+            <h4 style="color: var(--secondary); border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-top: 25px;">⚡ ฟังก์ชันและการใช้งานระบบ:</h4>
+            <ul>
+                <li><b>ระบบ Export Excel:</b> สามารถส่งออกข้อมูลตารางของทุกแท็บหน้าจอ เป็นไฟล์ Excel ได้ทันทีด้วยปุ่มด้านบน</li>
+                <li><b>เอกสารแก้ไขได้อิสระ:</b> เอกสาร Report ทุกฉบับ สามารถใช้เมาส์คลิกที่ตัวอักษรเพื่อพิมพ์แก้ไข หรือเติมวันที่ได้ทุกจุดก่อนสั่งปริ้นต์</li>
+                <li><b>Hydrotest แนบรูปได้:</b> มีปุ่มสำหรับคลิกเพื่อเลือกไฟล์รูปภาพแนบลงไปในเอกสารได้เลย</li>
+                <li><b>รองรับถัง Softener:</b> หากเลือกชั้นสารกรองเป็น "Resin" ระบบจะทำการคำนวณและเพิ่ม "ถังน้ำเกลือ" ให้อัตโนมัติ</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div id="login-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--primary); background-image: radial-gradient(circle at 50% 0%, #1E293B 0%, var(--primary) 70%); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;">
+    <h1 style="font-size: 3em; margin-bottom: 5px; letter-spacing: 3px; color: var(--gold); text-shadow: 0 4px 20px rgba(212, 175, 55, 0.4); text-transform: uppercase;">CHAKRIT WELLGROW</h1>
+    <h2 style="margin-top: 0; margin-bottom: 40px; font-weight: 300; color: var(--bg-color); letter-spacing: 2px;">Enterprise Cloud OS</h2>
+    
+    <div style="background: rgba(255, 255, 255, 0.02); padding: 40px 50px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.2); text-align: left; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(20px); width: 350px;">
+        <h3 style="margin-top: 0; text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 25px; color: var(--gold); font-weight: 500; letter-spacing: 1px;">🔐 SECURE LOGIN</h3>
+        <label style="color:#94A3B8; font-weight:400; margin-bottom:8px; font-size:0.9em; margin-top:0;">USERNAME</label>
+        <input type="text" id="sys_username" placeholder="Enter Username" style="padding: 15px; font-size: 1.1em; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); width: 100%; margin-bottom: 20px; outline: none; background: rgba(0,0,0,0.2); color: white;">
+        <label style="color:#94A3B8; font-weight:400; margin-bottom:8px; font-size:0.9em; margin-top:0;">PASSWORD</label>
+        <input type="password" id="sys_password" placeholder="••••••••" style="padding: 15px; font-size: 1.2em; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); width: 100%; margin-bottom: 30px; outline: none; letter-spacing: 4px; background: rgba(0,0,0,0.2); color: white;">
+        <button onclick="checkLogin()" style="background: linear-gradient(135deg, var(--gold) 0%, #B8860B 100%); color: var(--primary); border: none; padding: 15px; font-size: 1.1em; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2); letter-spacing: 1px;">AUTHORIZE ACCESS</button>
+        <p id="login_error" style="color: #FCA5A5; margin-top: 20px; display: none; font-weight: 500; text-align: center; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.9em;"></p>
+    </div>
+</div>
+
+<div class="nav-tabs no-print">
+    <div class="tab active" onclick="setPage(1)">1. ออกแบบ/วัสดุ</div>
+    <div class="tab" onclick="setPage(2)">2. โครงสร้างถัง</div>
+    <div class="tab" onclick="setPage(3)">3. ท่อ/P&ID</div>
+    <div class="tab tab-color-tech" onclick="setPage(4)">4. Hydraulics</div>
+    <div class="tab tab-color-ai" onclick="setPage(5)">5. เคมี/Dosing</div>
+    <div class="tab tab-color-qc" onclick="setPage(6)">6. ฐานราก/QC</div>
+    <div class="tab" onclick="setPage(7)">7. BOQ/ผลิต</div>
+    <div class="tab tab-color-roi" onclick="setPage(8)">8. ROI</div>
+    <div class="tab tab-color-quote" onclick="setPage(9)">9. เสนอราคา</div>
+    <div class="tab tab-color-om" onclick="setPage(10)">10. O&M/คู่มือ</div>
+    <div class="tab tab-color-doc" onclick="setPage(11)">11. Design Calc</div>
+    <div class="tab tab-color-doc" onclick="setPage(12)">12. QC ตรวจปกติ</div>
+    <div class="tab tab-color-doc" onclick="setPage(13)">13. QC ITP</div>
+    <div class="tab tab-color-doc" onclick="setPage(14)">14. Hydrotest</div>
+    <div class="tab tab-color-money" onclick="setPage(15)">15. PO สั่งของ</div>
+    <div class="tab tab-color-money" onclick="setPage(16)">16. Invoice</div>
+    <div class="tab tab-color-admin" id="tab_admin" style="display:none;" onclick="setPage(17)">⚙️ Admin</div>
+    <div class="tab" id="tab_profile" style="display:none; background:#0F172A; color:#FDE68A; border-left:1px solid #334155;" onclick="setPage(18)">👤 My Profile</div>
+</div>
+
+<div class="container" id="printable-area">
+    
+    <div class="save-bar no-print">
+        <div>
+            <strong style="color:var(--primary); font-size:1.1em;">⚙️ Chakrit ERP OS:</strong> Enterprise Standard
+            <div id="status-indicator" class="sys-status" style="margin-top:5px;">🟢 System Online & Stable</div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <button class="btn btn-help" onclick="document.getElementById('manual-modal').style.display='flex'">❓ คู่มือระบบ</button>
+            <div style="border-left: 1px solid var(--border); height: 30px; margin: 0 5px;"></div>
+            <button class="btn" style="background:#0F766E; color:white;" onclick="exportActivePageToExcel()">📊 Export หน้าปัจจุบัน (Excel)</button>
+            <div style="border-left: 1px solid var(--border); height: 30px; margin: 0 5px;"></div>
+            <button class="btn btn-export" onclick="exportProjectFile()">💾 Save JSON</button>
+            <input type="file" id="importFile" style="display:none" accept=".json" onchange="importProjectFile(event)">
+            <button class="btn" style="background:#FEF3C7; color:#D97706; border:1px solid #FDE68A;" onclick="document.getElementById('importFile').click()">📂 Open JSON</button>
+            <div style="border-left: 1px solid var(--border); height: 30px; margin: 0 5px;"></div>
+            <button class="btn btn-save" onclick="saveProjectData()" style="background:#E0F2FE; color:#0369A1; border:1px solid #BAE6FD;">☁️ Quick Save</button>
+            <button class="btn btn-load" onclick="loadProjectData()" style="background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE;">☁️ Quick Load</button>
+            <button class="btn btn-logout" onclick="logoutSystem()">🔒 ล็อกจอ</button>
+        </div>
+    </div>
+
+    <div class="print-timestamp" id="timestamp_display">พิมพ์เอกสารเมื่อ: --/--/---- | พิมพ์โดย: -</div>
+
+    <div class="project-header" id="proj-head">
+        <h2 style="margin-top: 0; margin-bottom: 20px; font-weight:600; letter-spacing:1px; color:var(--gold);">
+            ENTERPRISE ENGINEERING REPORT
+        </h2>
+        <div style="display: grid; grid-template-columns: 2fr 1fr 0.5fr; gap: 20px;">
+            <div><label>ชื่อโครงการ / เลขที่อ้างอิง (Project Name):</label><input type="text" id="proj_name" value="โครงการระบบผลิตน้ำอุตสาหกรรม (Industrial WTP)" oninput="triggerUpdate()"></div>
+            <div><label>วิศวกรผู้รับผิดชอบ (Engineer In Charge):</label><input type="text" id="eng_name" value="ทีมวิศวกรรม (Engineering Dept.)" oninput="triggerUpdate()"></div>
+            <div><label>Revision:</label><input type="text" id="proj_rev" value="00" oninput="triggerUpdate()" style="text-align:center;"></div>
+        </div>
+    </div>
+
+    <div id="p1" class="page active">
+        <div class="card no-print" style="background: rgba(15, 23, 42, 0.02); border-color: rgba(212, 175, 55, 0.2);">
+            <h3 style="color: var(--primary); margin-top:0;">📚 มาตรฐานการออกแบบอ้างอิงระดับสากล</h3>
+            <ul style="margin: 0; padding-left: 20px; font-size:0.95em; color: var(--text-main); line-height: 1.8;">
+                <li><b>Mechanical (ASME):</b> ASME Sec VIII Div. 1 (UG-27 Shell, UG-32 Head, UG-34 Flat Cover, UG-37 Repad)</li>
+                <li><b>Structural (AISC):</b> AISC Steel Construction Manual 15th Ed. สำหรับออกแบบกระดูกงู</li>
+                <li><b>Process (AWWA):</b> AWWA B100 สำหรับระบบก้างปลา และ Ion Exchange Resin</li>
+            </ul>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom:20px;" class="no-print">
+            <button class="btn btn-update" onclick="triggerUpdate()" style="flex:1; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);">🔄 ซิงค์ข้อมูลวิศวกรรม</button>
+            <button class="btn btn-print" onclick="printSinglePage('p1')" style="flex:1;">🖨️ พิมพ์เฉพาะหน้า 1</button>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>1. Vessel Specifications (ข้อมูลถังหลัก)</h3>
+                <div style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.3); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <label style="margin-top:0; color: var(--primary); font-weight:700;">จำนวนถังในชุดระบบ (System Tank Quantity):</label>
+                    <select id="tank_qty" onchange="triggerUpdate()" style="font-weight: 600; color: var(--primary); background: #fff;"><option value="1">1 ถัง (Single Vessel System)</option><option value="2">2 ถัง (Twin Vessels System)</option><option value="3" selected>3 ถัง (Triple Vessels System)</option><option value="4">4 ถัง (Quad Vessels System)</option></select>
+                </div>
+                <label>มาตรฐานวัสดุ (Material Standard):</label>
+                <select id="mat" onchange="triggerUpdate()"><option value="100,7.85,55">SS400 (Carbon Steel - เหล็กแผ่นมาตรฐานทั่วไป)</option><option value="115,7.85,60">A36 (Carbon Steel - เหล็กโครงสร้าง)</option><option value="115,7.85,65">A516 Gr.70 (Pressure Vessel Quality - สำหรับทนแรงดัน)</option><option value="138,8.0,145">SUS304 (Stainless Steel - สแตนเลส 304)</option><option value="150,8.0,195" selected>SUS316L (High Grade Stainless - สแตนเลส 316L)</option></select>
+                <label>ระบบท่อน้ำออกล่าง (Bottom Collection):</label>
+                <select id="collection_type" onchange="triggerUpdate()"><option value="plate">Plate Strainer (แผ่นตะแกรงดามกระดูกงู + หัวกรอง)</option><option value="fishbone" selected>Drilled Laterals (ระบบท่อก้างปลาเจาะรูตาข่าย AWWA)</option></select>
+                <div style="display:flex; gap:15px;">
+                    <div style="flex:1;"><label>เส้นผ่านศูนย์กลาง (ID) [mm]:</label><input type="number" id="id_v" value="1200" oninput="triggerUpdate()"></div>
+                    <div style="flex:1;"><label>ความเร็วลมออกแบบ [m/s]:</label><input type="number" id="wind_v" value="30" oninput="triggerUpdate()"></div>
+                </div>
+                <div style="margin-top: 20px; background: rgba(8, 145, 178, 0.05); padding: 20px; border-radius: 10px; border: 1px dashed var(--tech);">
+                    <label style="margin-top:0; color: var(--tech); font-weight:700;">กำหนดขนาดท่อเมน (Main Pipe Override):</label>
+                    <select id="manual_pipe_size" onchange="triggerUpdate()" style="font-weight:600;"><option value="auto" selected>คำนวณอัตโนมัติ (Auto Calculation)</option><option value="1.5">1.5 นิ้ว (1-1/2")</option><option value="2">2 นิ้ว (2")</option><option value="2.5">2.5 นิ้ว (2-1/2")</option><option value="3">3 นิ้ว (3")</option><option value="4">4 นิ้ว (4")</option><option value="6">6 นิ้ว (6")</option><option value="8">8 นิ้ว (8")</option></select>
+                </div>
+                <div id="rec_pipe_badge" class="inline-sugg" style="margin-top: 15px;">🔍 กำลังประมวลผลขนาดท่อ...</div>
+                <div id="rec_manhole_badge" class="inline-sugg" style="background: rgba(15, 23, 42, 0.05); border-color: var(--primary); color: var(--primary);">🔍 กำลังประมวลผล Manhole...</div>
+                <div style="display:flex; gap:15px; margin-top:15px;">
+                    <div style="flex:1;"><label>แรงดันออกแบบ [bar]:</label><input type="number" id="p_v" value="5" oninput="triggerUpdate()"></div>
+                    <div style="flex:1;"><label>ค่าเผื่อกัดกร่อน (C.A.) [mm]:</label><input type="number" id="ca" value="1.0" oninput="triggerUpdate()"></div>
+                </div>
+                <button class="btn btn-auto no-print" onclick="autoCalculateThickness()" style="box-shadow: 0 4px 15px rgba(51, 65, 85, 0.2);">✨ คำนวณความหนาปลอดภัยอัตโนมัติ</button>
+            </div>
+            
+            <div class="card">
+                <h3>2. Geometry & Dynamic 3D Preview</h3>
+                <label>ประเภทฝาถัง (Head Type):</label>
+                <select id="head_type" onchange="triggerUpdate()"><option value="1">Torispherical Head (ก้นกระทะ)</option><option value="2" selected>Ellipsoidal 2:1 Head (ก้นวงรี)</option></select>
+                
+                <div id="tank-3d-container" style="width: 100%; height: 350px; background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; margin-top: 15px; overflow: hidden; cursor: grab;"></div>
+
+                <label>ความสูงส่วนกระบอก Shell (H) [mm]:</label>
+                <input type="number" id="h_v" value="1500" oninput="triggerUpdate()" style="font-size: 1.1em; font-weight: 600; color: var(--primary);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px;">
+                    <div><label>หนา Shell [mm]:</label><input type="number" id="t_v" value="6.0" oninput="triggerUpdate()"><span id="warn_s" class="inline-warn"></span></div>
+                    <div><label>หนา Head [mm]:</label><input type="number" id="t_h" value="6.0" oninput="triggerUpdate()"><span id="warn_h" class="inline-warn"></span></div>
+                    <div><label>หนา Strainer [mm]:</label><input type="number" id="t_str" value="6.0" oninput="triggerUpdate()"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p2" class="page">
+        <button class="btn btn-print no-print" onclick="printSinglePage('p2')">🖨️ พิมพ์รายงานวิศวกรรม (หน้า 2)</button>
+        <div class="card">
+            <h3>1. Cylindrical Shell Analysis (ASME UG-27)</h3>
+            <div id="calc-shell" class="math-box"></div>
+            <h3>2. Formed Head Analysis (ASME UG-32)</h3>
+            <div id="calc-head" class="math-box"></div>
+            <h3 id="p2-title-collection">3. Bottom Collection Design (ระบบน้ำออกล่าง)</h3>
+            <div id="calc-strainer" class="math-box" style="border-left-color: #0EA5E9; color: #E0F2FE; background: #082F49; line-height: 1.8;"></div>
+            <h3>4. Lifting Lug & Center of Gravity (C.G.)</h3>
+            <div id="calc-lug" class="math-box"></div>
+        </div>
+        <div class="card">
+            <h3>5. Manhole Flat Cover Analysis (ASME UG-34)</h3>
+            <div id="calc-manhole" class="math-box"></div>
+            <h3>6. Manhole Reinforcement Pad (ASME UG-37)</h3>
+            <div id="calc-repad" class="math-box" style="border-left-color: #F59E0B; color: #FEF3C7; background: #451A03;"></div>
+            <h3>7. Hydrotest Load & Fill Time</h3>
+            <div id="calc-hydro" class="math-box" style="border-left-color: var(--success); color: #ECFDF5; background: #064E3B;"></div>
+            <h3>8. Wind Load & Overturning Moment</h3>
+            <div id="calc-wind" class="math-box" style="border-left-color: #8B5CF6; color: #F5F3FF; background: #2E1065;"></div>
+            <h3>9. Fluid Dynamics, Pipe & Air Vent Sizing</h3>
+            <div id="calc-pipe" class="math-box" style="border-left-color: #3B82F6; color: #EFF6FF; background: #1E3A8A;"></div>
+        </div>
+
+        <div class="card nameplate-section">
+            <h3>10. Welding Procedure Specification (WPS)</h3>
+            <div class="spec-desc" style="background:#FEF2F2; border-color:#FECACA; color:#B91C1C;">สเปคคำแนะนำการตั้งค่าตู้เชื่อม กระแสไฟ และแก๊สปกคลุมสำหรับช่างเชื่อมหน้างาน</div>
+            <div id="wps-guide" class="math-box" style="border-left-color: var(--danger); color: #FEF2F2; background: #7F1D1D;"></div>
+
+            <h3>11. ASME Nameplate Generator (ป้ายแท็กถัง)</h3>
+            <div class="spec-desc">แบบร่างสำหรับสลักลงแผ่นป้าย Nameplate สแตนเลส ติดตั้งหน้าถัง</div>
+            
+            <div class="no-print" style="margin-bottom:15px; text-align:right;">
+                <button class="btn btn-print" onclick="printNameplate()" style="background:var(--admin); color:white;">🖨️ พิมพ์เฉพาะ Nameplate (ให้ช่างสลักเลเซอร์)</button>
+                <button class="btn btn-update" onclick="triggerUpdate()" style="margin:0; padding: 8px 20px; font-size:0.9em;">🔄 ซิงค์ข้อมูล Nameplate</button>
+            </div>
+            
+            <div class="nameplate-content" style="border: 2px solid var(--secondary); padding: 30px; text-align: center; background: linear-gradient(145deg, #F8FAFC, #F1F5F9); border-radius: 12px; max-width: 550px; margin: 0 auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.02);">
+                <input type="text" id="np_company_name" value="CHAKRIT WELLGROW" class="editable-item-name" style="font-size: 1.6em; letter-spacing: 3px; text-align:center; font-weight:700; background:transparent; border:none; width:100%; margin:0; padding:0; color:var(--primary);">
+                <p style="margin: 8px 0 20px 0; font-size: 0.9em; font-weight: 600; border-bottom: 2px solid var(--primary); padding-bottom: 12px; color: var(--secondary);">PRESSURE VESSEL</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; text-align: left; font-size: 1.05em; font-weight: 600; gap: 15px; color: #334155;">
+                    <div>YEAR BUILT: <span id="np_year">2026</span></div>
+                    <div>SERIAL NO: <span id="np_serial">QW-001</span></div>
+                    <div>MAWP: <span id="np_mawp">5 BAR</span></div>
+                    <div>AT MAX TEMP: <span>65 °C</span></div>
+                    <div>MDMT: <span>0 °C</span></div>
+                    <div>AT MAWP: <span id="np_mawp2">5 BAR</span></div>
+                    <div>HYDROTEST: <span id="np_hydro">6.5 BAR</span></div>
+                    <div>RADIOGRAPHY: <span>RT-3</span></div>
+                </div>
+                <p style="margin: 25px 0 0 0; font-size: 0.85em; text-align: center; letter-spacing: 1.5px; color: #64748B;">DESIGNED TO ASME SEC. VIII DIV. 1</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="p3" class="page">
+        <div style="display: flex; gap: 15px;" class="no-print">
+            <button class="btn btn-update" onclick="triggerUpdate()" style="flex:1; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);">🔄 อัปเดตข้อมูลท่อและ P&ID</button>
+            <button class="btn btn-print" onclick="printSinglePage('p3')" style="flex:1;">🖨️ พิมพ์เฉพาะหน้า 3</button>
+        </div>
+        
+        <div class="card">
+            <h3>Nozzle Orientation Map (แผนผังตำแหน่งท่อ)</h3>
+            <div id="pipe-suggestion-box" style="background:#FEFCE8; border:1px dashed var(--gold); padding:20px; border-radius:10px; margin-bottom:25px; color:#B45309; font-weight:600;"></div>
+            <table id="noz-map">
+                <thead><tr><th>No.</th><th>ตำแหน่ง / หน้าที่</th><th>ขนาด</th><th>Elevation (สูง-mm)</th><th>Orientation (องศา)</th><th>ราคาต่อชุด (บาท)</th><th class="no-print">ลบ</th></tr></thead>
+                <tbody id="noz-body">
+                    <tr><td>N1</td><td><input type="text" value="Inlet (น้ำเข้า)" class="editable-input n-name"></td><td><input type="text" value="3\"" class="editable-input n-size"></td><td><input type="number" value="1300" class="editable-input n-h"></td><td><input type="number" value="0" class="editable-input n-d"></td><td><input type="number" value="1800" class="editable-input n-p" id="noz_p_1" oninput="triggerUpdate()"></td><td class="no-print"><button class="btn btn-del" onclick="removeRow(this)">X</button></td></tr>
+                    <tr><td>N2</td><td><input type="text" value="Outlet (น้ำออก)" class="editable-input n-name"></td><td><input type="text" value="3\"" class="editable-input n-size"></td><td><input type="number" value="300" class="editable-input n-h"></td><td><input type="number" value="180" class="editable-input n-d"></td><td><input type="number" value="1800" class="editable-input n-p" id="noz_p_2" oninput="triggerUpdate()"></td><td class="no-print"><button class="btn btn-del" onclick="removeRow(this)">X</button></td></tr>
+                    <tr><td>N3</td><td><input type="text" value="Air Vent (ท่อระบายอากาศ)" class="editable-input n-name"></td><td><input type="text" value="1\"" class="editable-input n-size"></td><td><input type="number" value="1500" class="editable-input n-h"></td><td><input type="number" value="90" class="editable-input n-d"></td><td><input type="number" value="500" class="editable-input n-p" id="noz_p_6" oninput="triggerUpdate()"></td><td class="no-print"><button class="btn btn-del" onclick="removeRow(this)">X</button></td></tr>
+                    <tr><td>M1</td><td><input type="text" value="Top Manhole (ฝาบน)" class="editable-input n-name"></td><td><input type="text" value="20\"" class="editable-input n-size"></td><td><input type="number" value="1500" class="editable-input n-h"></td><td><input type="number" value="0" class="editable-input n-d"></td><td><input type="number" value="0" class="editable-input n-p" id="noz_p_3" disabled></td><td class="no-print"><button class="btn btn-del" onclick="removeRow(this)">X</button></td></tr>
+                    <tr><td>M2</td><td><input type="text" value="Side Manhole (ด้านข้าง)" class="editable-input n-name"></td><td><input type="text" value="20\"" class="editable-input n-size"></td><td><input type="number" value="800" class="editable-input n-h"></td><td><input type="number" value="90" class="editable-input n-d"></td><td><input type="number" value="0" class="editable-input n-p" id="noz_p_4" disabled></td><td class="no-print"><button class="btn btn-del" onclick="removeRow(this)">X</button></td></tr>
+                    <tr><td>M3</td><td><input type="text" value="Bottom Manhole (ถ่ายสาร)" class="editable-input n-name"></td><td><input type="text" value="20\"" class="editable-input n-size"></td><td><input type="number" value="200" class="editable-input n-h"></td><td><input type="number" value="270" class="editable-input n-d"></td><td><input type="number" value="0" class="editable-input n-p" id="noz_p_5" disabled></td><td class="no-print"><button class="btn btn-del" onclick="removeRow(this)">X</button></td></tr>
+                </tbody>
+            </table>
+            <button class="btn btn-add no-print" onclick="addNozzleRow()" style="margin-top:15px; background: #F1F5F9; color: var(--primary); border: 1px solid #CBD5E1;">+ เพิ่มจุดเชื่อมต่อ (Add Nozzle)</button>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 25px; border-radius: 12px; margin-top: 35px;">
+                <h4 style="margin: 0 0 15px 0; color: var(--primary);">🔀 แผนภาพชุดท่อหน้าถัง (P&ID Valve Manifold Schematic)</h4>
+                <div class="svg-container" style="background:#fff; border:1px solid #E2E8F0; height:280px; margin-bottom:15px; border-radius:8px;">
+                    <svg id="pid-svg" width="100%" height="100%" viewBox="0 0 400 200"></svg>
+                </div>
+                <div id="manifold_spec" style="font-size: 0.95em; color: #475569; font-weight:500;"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Volume Breakdown (ปริมาตรสะสมรายโซน)</h3>
+                <div id="vol-info-full" style="font-weight:600; color:var(--secondary); margin-bottom:15px; background:#EFF6FF; padding:15px; border-radius:8px;"></div>
+                <div style="max-height:400px; overflow-y:auto; border:1px solid #E2E8F0; border-radius:8px;">
+                    <table id="vol-table" style="margin-top:0;">
+                        <thead><tr><th style="position: sticky; top: 0; background: var(--primary); color: white;">ระดับความสูง (cm)</th><th style="position: sticky; top: 0; background: var(--primary); color: white;">ปริมาตรสะสม (Litre)</th><th style="position: sticky; top: 0; background: var(--primary); color: white;">โซนโครงสร้าง</th></tr></thead>
+                        <tbody id="vol-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Multi-Layer Media & Softener Engineering</h3>
+                <div style="background:#F0FDF4; padding:25px; border-radius:12px; margin-bottom:20px; border:1px solid #BBF7D0;">
+                    <h4 style="margin:0 0 20px 0; color:#15803D; border-bottom: 2px solid #86EFAC; padding-bottom:12px;">การออกแบบชั้นสารกรอง (Media Layers)</h4>
+                    <div style="display:flex; gap:15px; margin-bottom:15px;">
+                        <div style="flex:2;"><label style="margin-top:0;">Top Layer:</label>
+                            <select id="m1_type" onchange="triggerUpdate()"><option value="1.1">Anthracite (1,100 kg/m³)</option><option value="0.8">Carbon (800 kg/m³)</option><option value="0.85">Cation Resin - Softener (850 kg/m³)</option><option value="0">None</option></select>
+                        </div>
+                        <div style="flex:1;"><label style="margin-top:0;">สูง [mm]:</label><input type="number" id="m1_h" value="300" oninput="triggerUpdate()"></div>
+                    </div>
+                    <div style="display:flex; gap:15px; margin-bottom:15px;">
+                        <div style="flex:2;"><label style="margin-top:0;">Middle Layer:</label><select id="m2_type" onchange="triggerUpdate()"><option value="1.6" selected>Fine Sand (1,600 kg/m³)</option><option value="0">None</option></select></div>
+                        <div style="flex:1;"><label style="margin-top:0;">สูง [mm]:</label><input type="number" id="m2_h" value="400" oninput="triggerUpdate()"></div>
+                    </div>
+                    <div style="display:flex; gap:15px; margin-bottom:15px;">
+                        <div style="flex:2;"><label style="margin-top:0;">Bottom Layer (Support):</label><select id="m3_type" onchange="triggerUpdate()"><option value="1.8" selected>Gravel (1,800 kg/m³)</option><option value="0">None</option></select></div>
+                        <div style="flex:1;"><label style="margin-top:0;">สูง [mm]:</label><input type="number" id="m3_h" value="200" oninput="triggerUpdate()"></div>
+                    </div>
+                    <div id="media-out" style="color:#166534; font-weight:700; margin-top:20px; border-top: 1px dashed #86EFAC; padding-top: 15px; font-size:1.05em;"></div>
+                    <div id="media-bags-out" style="color:#15803D; font-size:0.95em; margin-top:15px; padding:15px; background:#DCFCE7; border-radius:8px; line-height:1.8;"></div>
+                    <div id="softener-calc-box" style="display:none; margin-top: 15px; background: #FFF7ED; padding: 15px; border-radius: 8px; border: 1px solid #FFEDD5; color: #C2410C;"></div>
+                    <div id="freeboard-check" style="margin-top: 20px; font-weight: 600; border-radius: 8px; padding: 15px; font-size:1.1em;"></div>
+                    <div id="nozzle-qty-out" style="color:#C2410C; font-weight:600; margin-top:15px; background: #FFFBEB; padding: 15px; border-radius: 8px; border: 1px solid #FEF3C7; font-size:1.1em;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+	<div id="p4" class="page">
+        <div class="grid">
+            <div class="card" style="border-color:var(--tech);">
+                <h3 style="color:var(--tech); border-left-color:var(--tech);">🌊 Hazen-Williams Friction Loss Calculator</h3>
+                <div class="spec-desc">คำนวณแรงดันสูญเสียในเส้นท่อ (Head Loss) เพื่อสเปคปั๊มน้ำให้แม่นยำที่สุด</div>
+                <label>ความยาวท่อเมนตรงรวม (Straight Pipe Length) [m]:</label>
+                <input type="number" id="hz_len" value="20" oninput="triggerUpdate()">
+                <label>จำนวนข้องอ 90° (Elbow 90 qty):</label>
+                <input type="number" id="hz_elbow" value="6" oninput="triggerUpdate()">
+                <label>จำนวนสามทาง (Tee qty):</label>
+                <input type="number" id="hz_tee" value="2" oninput="triggerUpdate()">
+                <label>ระยะส่งน้ำขึ้นถังในแนวดิ่ง (Static Lift) [m]:</label>
+                <input type="number" id="hz_static" value="2.5" oninput="triggerUpdate()">
+                <div id="calc-hazen" class="math-box" style="margin-top:20px; border-left-color:var(--tech); color:#CFFAFE; background:#0F766E;"></div>
+                <div id="pump-power-out" style="color:#B91C1C; font-weight:700; margin-top:15px; font-size: 1.15em; background: #FEF2F2; padding: 20px; border-radius: 10px; border: 1px dashed #F87171;"></div>
+            </div>
+            
+            <div class="card" style="border-color:#0EA5E9;">
+                <h3 style="color:#0284C7; border-left-color:#0284C7;">💨 Air Scour Blower Sizing</h3>
+                <div class="spec-desc">คำนวณเครื่องผลิตลม (Roots Blower) ช่วยเป่ากวนสารกรอง (Air Scour) ก่อนล้างด้วยน้ำ</div>
+                <label>เลือกอัตราเป่าลม (Air Flow Rate):</label>
+                <select id="air_rate" onchange="triggerUpdate()">
+                    <option value="60">60 m/h (มาตรฐานทั่วไป)</option>
+                    <option value="80">80 m/h (ล้างหนัก/ตะกอนฝังแน่น)</option>
+                </select>
+                <div id="calc-blower" class="math-box" style="margin-top:20px; border-left-color:#0284C7; color:#E0F2FE; background:#075985;"></div>
+                <div style="background: #F1F5F9; padding: 20px; border-radius: 10px; margin-top: 20px; font-size: 0.95em; color: #475569; border-left: 4px solid #CBD5E1;">*ระบบจะเพิ่มค่า <b>Roots Blower</b> ลงใบ BOQ อัตโนมัติ หาก ID >= 1200 mm</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p5" class="page">
+        <div class="grid">
+            <div class="card" style="border-color:var(--ai);">
+                <h3 style="color:var(--ai); border-left-color:var(--ai);">🧪 Water Chemistry AI</h3>
+                <div class="spec-desc" style="background:#F0FDF4; border-color:#BBF7D0; color:#15803D;">ป้อนค่าผล Lab น้ำดิบ เพื่อให้ AI วิเคราะห์ชนิดสารกรอง และระบบที่เหมาะสม</div>
+                <label>แหล่งน้ำดิบ (Source):</label>
+                <select id="chem_source" onchange="triggerUpdate()">
+                    <option value="well">น้ำบาดาล (Deep Well)</option>
+                    <option value="river">น้ำผิวดิน/คลอง (Surface Water)</option>
+                    <option value="city">น้ำประปา (City Water)</option>
+                </select>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><label>ความขุ่น [NTU]:</label><input type="number" id="chem_turb" value="15" oninput="triggerUpdate()"></div>
+                    <div><label>สนิมเหล็ก [mg/L]:</label><input type="number" id="chem_fe" value="1.5" oninput="triggerUpdate()"></div>
+                    <div><label>ความกระด้าง [mg/L]:</label><input type="number" id="chem_hard" value="120" oninput="triggerUpdate()"></div>
+                    <div><label>TDS (สารละลาย) [mg/L]:</label><input type="number" id="chem_tds" value="300" oninput="triggerUpdate()"></div>
+                    <div style="grid-column: span 2;"><label>ค่าความเป็นกรด-ด่าง (pH):</label><input type="number" id="chem_ph" value="7.2" step="0.1" oninput="triggerUpdate()"></div>
+                </div>
+                <div style="background:#F8FAFC; padding:25px; border-radius:12px; border:2px dashed var(--ai); margin-top:25px;">
+                    <h4 style="margin-top:0; color:#059669; font-size:1.2em;">🤖 AI System Recommendation:</h4>
+                    <div id="ai_chem_out" style="font-size:1.05em; line-height:1.9; color:#1E293B;">กำลังประมวลผล...</div>
+                </div>
+            </div>
+            
+            <div class="card" style="border-color:var(--warning);">
+                <h3 style="color:var(--warning); border-left-color:var(--warning);">💉 Chemical Dosing System</h3>
+                <div class="spec-desc">คำนวณปริมาณการจ่ายเคมี และขนาดถังเก็บสารเคมี (PE Tank)</div>
+                <label>สารเคมีที่ใช้ (Chemical Type):</label>
+                <select id="dose_chem" onchange="triggerUpdate()">
+                    <option value="chlorine">Chlorine (คลอรีนน้ำ 10%)</option>
+                    <option value="pac">PAC (สารส้มแพคน้ำ 10%)</option>
+                    <option value="naoh">NaOH (โซดาไฟ 20%)</option>
+                </select>
+                <label>ความเข้มข้นที่ต้องการเติมลงในน้ำ (Dose Target) [ppm]:</label>
+                <input type="number" id="dose_ppm" value="2.0" oninput="triggerUpdate()">
+                <label>จำนวนวันสำรองสารเคมี (Days to Refill Tank):</label>
+                <input type="number" id="dose_days" value="15" oninput="triggerUpdate()">
+                <div id="calc-dosing" class="math-box" style="margin-top:20px; border-left-color:var(--warning); color:#FEF3C7; background:#78350F;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p6" class="page">
+        <div class="card" style="border-color:var(--qc);">
+            <h3 style="color:var(--qc); border-left-color:var(--qc);">🏗️ Structural Support & QC Plan</h3>
+            <div class="grid">
+                <div style="background:#F8FAFC; padding:25px; border-radius:12px; border:1px solid var(--border);">
+                    <h4 style="margin-top:0; color:var(--om); font-size:1.15em;">1. การออกแบบขาตั้งถัง (Leg Support Design)</h4>
+                    <label>จำนวนขาตั้ง (Quantity of Legs):</label>
+                    <select id="leg_qty" onchange="triggerUpdate()">
+                        <option value="3">3 ขา</option>
+                        <option value="4" selected>4 ขา</option>
+                        <option value="6">6 ขา</option>
+                    </select>
+                    <div id="calc-leg-support" class="math-box" style="margin-top:20px; border-left-color:var(--om); color:#E0E7FF; background:#312E81;"></div>
+                </div>
+                <div style="background:#F8FAFC; padding:25px; border-radius:12px; border:1px solid var(--border);">
+                    <h4 style="margin-top:0; color:var(--danger); font-size:1.15em;">2. แผนการตรวจสอบ NDT (Non-Destructive Testing)</h4>
+                    <label>ระดับการตรวจสอบ X-Ray (Radiography):</label>
+                    <select id="ndt_rt" onchange="triggerUpdate()">
+                        <option value="0.1">RT-3 (Spot 10%) - ถังแรงดันน้ำทั่วไป</option>
+                        <option value="0.2">RT-2 (Spot 20%) - ถังอุตสาหกรรม</option>
+                        <option value="1.0">RT-1 (Full 100%) - ถังแรงดันสูงพิเศษ</option>
+                    </select>
+                    <div id="calc-ndt" class="math-box" style="margin-top:20px; border-left-color:var(--danger); color:#FEE2E2; background:#7F1D1D;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p7" class="page">
+        <div style="display: flex; gap: 15px; margin-bottom: 25px;" class="no-print">
+            <button class="btn btn-print" onclick="printSinglePage('p7')" style="flex:1; margin:0;">🖨️ พิมพ์เฉพาะหน้า 7</button>
+            <button class="btn btn-export" onclick="exportActivePageToExcel()" style="flex:1; margin:0; background:#0F766E; color:white;">📊 Export Excel BOQ</button>
+        </div>
+        
+        <div class="grid" style="margin-bottom: 30px;">
+            <div class="card" style="margin:0; padding:25px;">
+                <h3 style="margin-bottom:15px;">📊 สัดส่วนต้นทุน (Cost Breakdown)</h3>
+                <div style="height:220px; position:relative;"><canvas id="costChart"></canvas></div>
+            </div>
+            <div class="card" style="margin:0; padding:25px;">
+                <h3 style="margin-bottom:15px;">🏭 Yield แผ่นเหล็ก (Material Usage)</h3>
+                <div id="calc-yield" style="font-size:0.95em;"></div>
+            </div>
+            <div class="card" style="margin:0; padding:25px;">
+                <h3 style="margin-bottom:15px;">⏳ Production Insights</h3>
+                <div style="font-size:0.95em; line-height:1.8;">
+                    <b>🎨 สีอีพ็อกซี่ 300μm:</b> รองพื้น: <span id="insight_primer" style="color:var(--danger); font-weight:700;">0</span> ลิตร | ทับหน้า: <span id="insight_top" style="color:var(--danger); font-weight:700;">0</span> ลิตร<br>
+                    <b>⏱️ ระยะเวลาผลิต:</b> <span id="insight_days" style="color:var(--danger); font-weight:700;">0</span> วัน<br>
+                    <b>🚛 แนะนำรถขนส่ง:</b> <span id="insight_truck" style="color:var(--success); font-weight:700;">...</span><br>
+                    <div id="auto-schedule" style="margin-top:15px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="font-size:1.5em; text-transform:uppercase; color:var(--primary);">Enterprise BOQ Master</h3>
+            <p style="color:#64748B; margin-top:-10px; margin-bottom:20px;">พิมพ์แก้ไขตัวเลขราคา/หน่วย ได้อย่างอิสระ 100%</p>
+            <button class="btn btn-calc no-print" style="background:var(--danger); color:white; width:auto; padding:10px 25px; border-color:var(--danger);" onclick="triggerUpdate()">🔄 คำนวณยอดราคาสุทธิใหม่ (Recalculate)</button>
+            <div id="boq_multiplier_badge" style="font-weight:600; color:var(--danger); margin-top:10px; margin-bottom:15px; font-size:1.1em;"></div>
+            
+            <table id="boq-master">
+                <thead>
+                    <tr>
+                        <th style="width: 45%; background:var(--primary); color:var(--gold);">รายการส่วนประกอบ (Description)</th>
+                        <th style="width: 20%; text-align:center; background:var(--primary); color:var(--gold);">จำนวน (Qty)</th>
+                        <th style="width: 15%; text-align:center; background:var(--primary); color:var(--gold);">ราคา/หน่วย (บาท)</th>
+                        <th style="width: 20%; text-align:right; background:var(--primary); color:var(--gold);">รวมเป็นเงิน (THB)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><input type="text" id="i_name_1" class="editable-item-name" value="1. โครงสร้างตัวถังหลัก (Cylindrical Shell)"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_w_shell" class="editable-input qty-input" oninput="triggerUpdate()"> kg</td><td><input type="number" id="boq_p_shell" class="editable-input" value="195" oninput="triggerUpdate()"></td><td id="boq_t_shell" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr><td><input type="text" id="i_name_2" class="editable-item-name" value="2. ฝาถังบน-ล่าง (Dished Heads)"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_w_head" class="editable-input qty-input" oninput="triggerUpdate()"> kg</td><td><input type="number" id="boq_p_head" class="editable-input" value="195" oninput="triggerUpdate()"></td><td id="boq_t_head" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr><td><input type="text" id="i_name_3" class="editable-item-name" value="3. อุปกรณ์ท่อภายใน (Internal Distributors)"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_w_str" class="editable-input qty-input" oninput="triggerUpdate()"> <span id="lbl_unit_3" style="width:25px;">kg</span></td><td><input type="number" id="boq_p_str" class="editable-input" value="195" oninput="triggerUpdate()"></td><td id="boq_t_str" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr><td><input type="text" id="i_name_4" class="editable-item-name" value="4. หัวกรองน้ำ (Strainer Nozzles)"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_q_noz" class="editable-input qty-input" oninput="triggerUpdate()"> <span id="lbl_unit_4" style="width:25px;">ชิ้น</span></td><td><input type="number" id="boq_p_noz" class="editable-input" value="150" oninput="triggerUpdate()"></td><td id="boq_t_noz" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr style="background:#F8FAFC;"><td colspan="4"><b>5. รายการหน้าแปลนท่อ (Flanges & Nozzles)</b></td></tr>
+                </tbody>
+                <tbody id="boq-dynamic-nozzles"></tbody>
+                <tbody>
+                    <tr style="background:#FEFCE8;"><td><input type="text" id="i_name_manhole" class="editable-item-name" value="6. ชุดแมนโฮลทั้งหมด (Manholes)" style="background:transparent !important; color:#B45309;"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_w_manhole" class="editable-input qty-input" oninput="triggerUpdate()"> kg</td><td><input type="number" id="boq_p_manhole" class="editable-input" value="195" oninput="triggerUpdate()"></td><td id="boq_t_manhole" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr><td><input type="text" id="i_name_leg" class="editable-item-name" value="7. ขารองรับถัง (U-Shape Folded Plate Legs)"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_w_leg" class="editable-input qty-input" oninput="triggerUpdate()"> kg</td><td><input type="number" id="boq_p_leg" class="editable-input" value="195" oninput="triggerUpdate()"></td><td id="boq_t_leg" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr><td><input type="text" id="i_name_lug" class="editable-item-name" value="8. หูหิ้วถังและแผ่นดาม (Lifting Lugs & Pads)"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_w_lug" class="editable-input qty-input" oninput="triggerUpdate()"> kg</td><td><input type="number" id="boq_p_lug" class="editable-input" value="195" oninput="triggerUpdate()"></td><td id="boq_t_lug" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr><td><input type="text" id="i_name_weld" class="editable-item-name" value="9. ลวดเชื่อมและตรวจสอบแนวเชื่อม NDT"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_w_weld" class="editable-input qty-input" oninput="triggerUpdate()"> kg</td><td><input type="number" id="boq_p_weld" class="editable-input" value="250" oninput="triggerUpdate()"></td><td id="boq_t_weld" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr style="background:#F0F9FF;"><td><input type="text" id="i_name_8" class="editable-item-name" value="10. ชุดท่อหน้าถังและวาล์ว (Face Piping)" style="background:transparent !important; color:#0369A1;"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_q_valve" class="editable-input qty-input" oninput="triggerUpdate()"> ชุด</td><td><input type="number" id="boq_p_valve" class="editable-input" value="2500" oninput="triggerUpdate()"></td><td id="boq_t_valve" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr style="background:#FFF7ED; display:none;" id="boq_tr_salt"><td><input type="text" class="editable-item-name" value="11. ถังและระบบดูดน้ำเกลือล้างเรซิ่น (Brine Tank System)" style="background:transparent !important; color:#C2410C;"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="boq_q_salt" class="editable-input qty-input" value="0" oninput="triggerUpdate()"> ชุด</td><td><input type="number" id="boq_p_salt" class="editable-input" value="18500" oninput="triggerUpdate()"></td><td id="boq_t_salt" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr style="background:#F0FDF4;"><td><input type="text" class="editable-item-name" value="12. เครื่องสูบลมล้างย้อน (Air Scour Roots Blower)" style="background:transparent !important; color:#15803D;"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="boq_q_blower" class="editable-input qty-input" value="0" oninput="triggerUpdate()"> ชุด</td><td><input type="number" id="boq_p_blower" class="editable-input" value="35000" oninput="triggerUpdate()"></td><td id="boq_t_blower" style="text-align:right; font-weight:600;">0.00</td></tr>
+                    <tr style="background:#FFF7ED;"><td><input type="text" class="editable-item-name" value="13. ชุดปั๊มและถังเคมี (Chemical Dosing Station)" style="background:transparent !important; color:#C2410C;"></td><td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="boq_q_dose" class="editable-input qty-input" value="0" oninput="triggerUpdate()"> ชุด</td><td><input type="number" id="boq_p_dose" class="editable-input" value="12500" oninput="triggerUpdate()"></td><td id="boq_t_dose" style="text-align:right; font-weight:600;">0.00</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr style="background:#F1F5F9; border-top:2px solid var(--admin);">
+                        <td colspan="2" style="text-align:right; font-size:1.1em; color:var(--admin);"><b>รวมน้ำหนักเหล็กสุทธิ (Total Structure Weight):</b></td>
+                        <td colspan="2" style="font-size:1.3em; font-weight:700; color:var(--primary); text-align:right;" id="w_total_display">0.00 kg</td>
+                    </tr>
+                    <tr style="background:#F8FAFC;">
+                        <td>ค่าแรงผลิตโครงสร้างและประกอบ (Fabrication Labor)</td>
+                        <td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_w_lb" class="editable-input qty-input" readonly style="border:none!important; background:transparent!important; color:var(--primary);"> kg</td>
+                        <td><input type="number" id="in_lb_rate" class="editable-input" value="55" oninput="triggerUpdate()"></td>
+                        <td id="tot_lb" style="text-align:right; font-weight:600;">0.00</td>
+                    </tr>
+                    <tr style="background:#F8FAFC;">
+                        <td>ค่าขัดพ่นสี 300μm (Painting Area - ภายนอกและภายใน)</td>
+                        <td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_area_val" class="editable-input qty-input" oninput="triggerUpdate()"> m²</td>
+                        <td><input type="number" id="in_pt_rate" class="editable-input" value="550" oninput="triggerUpdate()"></td>
+                        <td id="tot_pt" style="text-align:right; font-weight:600;">0.00</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="font-weight:500; text-align:right;">ค่าจัดส่งหน้างาน (Logistics & Transport)</td>
+                        <td style="text-align:center; color:#94A3B8;">(เหมาจ่าย)</td>
+                        <td><input type="number" id="in_ship_rate" class="editable-input" style="text-align:right;" value="7500" oninput="triggerUpdate()"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="font-weight:500; text-align:right;">กำไรการดำเนินงาน (Profit Margin)</td>
+                        <td style="display:flex; gap:8px; justify-content:center; align-items:center;"><input type="number" id="in_profit_rate" class="editable-input qty-input" value="30" oninput="triggerUpdate()"> %</td>
+                        <td style="text-align:right; color:#94A3B8;">-</td>
+                    </tr>
+                    <tr style="background: linear-gradient(135deg, var(--success) 0%, #064E3B 100%); color:white; font-size:1.8em; box-shadow: 0 -4px 15px rgba(16, 185, 129, 0.2);">
+                        <td colspan="3" style="text-align:right;"><strong>ราคาสุทธิ (GRAND TOTAL)</strong></td>
+                        <td id="grand_total" style="text-align:right; font-weight:700;">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div id="p8" class="page">
+        <div class="card" style="background:#FFFBEB; border-color:var(--gold);">
+            <h3 style="color:#B45309; border-left-color:var(--gold);">💼 ROI & Investment Pitch Deck</h3>
+            <div class="grid">
+                <div style="background:#F8FAFC; padding:25px; border-radius:12px; border:1px solid #E2E8F0;">
+                    <label>ค่าน้ำประปาเดิม หรือ ค่าน้ำซื้อ (City Water Cost) [บาท/คิว]:</label>
+                    <input type="number" id="roi_city" value="25" oninput="triggerUpdate()">
+                    <label>ต้นทุนกรองน้ำบาดาลใหม่ + ค่าไฟ + เคมี (Raw Water Cost) [บาท/คิว]:</label>
+                    <input type="number" id="roi_raw" value="5" oninput="triggerUpdate()">
+                    <label>ชั่วโมงการทำงานของระบบต่อวัน (Run Hours) [ชม./วัน]:</label>
+                    <input type="number" id="roi_hrs" value="12" oninput="triggerUpdate()">
+                </div>
+                <div style="background:#FFFFFF; padding:30px; border-radius:12px; border:2px dashed var(--gold); display:flex; flex-direction:column; justify-content:center;">
+                    <h4 style="margin-top:0; color:#B45309; font-size:1.3em;">📈 ผลการประเมินการลงทุน (Financial Output):</h4>
+                    <div id="roi_output" style="font-size:1.15em; line-height:1.9; color:var(--text-main);">กำลังคำนวณ...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p9" class="page">
+        <div class="quote-container card">
+            <div class="quote-header-box">
+                <div class="quote-logo" style="width: 60%;">
+                    <input type="text" id="q_company_name" value="CHAKRIT WELLGROW" class="editable-item-name" style="font-size: 2.2em; color: var(--primary); font-weight: 700; border:none; background:transparent; width:100%; padding:0; margin:0; letter-spacing: 2px;">
+                    <input type="text" id="q_company_sub" value="Water Treatment & Engineering Solutions" class="editable-item-name" style="color: #64748B; border:none; background:transparent; width:100%; padding:0; margin: 8px 0 0 0; font-size:1.1em;">
+                    <input type="text" id="q_company_contact" value="Tel: 08X-XXX-XXXX | Email: info@chakritwellgrow.com" class="editable-item-name" style="color: #64748B; border:none; background:transparent; width:100%; padding:0; margin: 0; font-size:0.95em;">
+                </div>
+                <div class="quote-details">
+                    <h2 style="color:var(--gold);">QUOTATION</h2>
+                    <p style="margin:5px 0;"><strong>เลขที่ (No.):</strong> <span id="q_no">QW-2026-001</span></p>
+                    <p style="margin:0;"><strong>วันที่ (Date):</strong> <span id="q_date">--/--/----</span></p>
+                </div>
+            </div>
+
+            <div class="quote-meta">
+                <div>
+                    <strong style="color:var(--secondary);">เรียน (Attention To):</strong> <br>
+                    <input type="text" id="q_cust_name" value="บริษัท ลูกค้า จำกัด (มหาชน)" style="width:95%; border:1px solid #CBD5E1; padding:10px; margin-top:8px; border-radius:6px;"><br>
+                    <input type="text" id="q_cust_addr" placeholder="ที่อยู่ลูกค้า" style="width:95%; border:1px solid #CBD5E1; padding:10px; margin-top:8px; border-radius:6px;">
+                </div>
+                <div>
+                    <strong style="color:var(--secondary);">ชื่อโครงการ (Project):</strong> <br>
+                    <div id="q_proj_name" style="margin-top:12px; font-weight:600; color:var(--primary); font-size:1.1em;" contenteditable="true">...</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 35px;">
+                <strong style="color:var(--secondary); font-size:1.1em;">จดหมายปะหน้า (Executive Summary):</strong>
+                <textarea id="q_cover_letter" style="width:100%; border:1px dashed #CBD5E1; background:#F8FAFC; font-size:1.05em; padding:20px; border-radius:8px; color:#475569;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">ทางบริษัทฯ มีความยินดีขอเสนอราคาระบบผลิตน้ำอุตสาหกรรม (Industrial Water Treatment System) ซึ่งออกแบบตามมาตรฐานวิศวกรรมสากล ASME Section VIII Div.1 เพื่อความปลอดภัยสูงสุดและอายุการใช้งานที่ยาวนาน โดยมีรายละเอียดดังต่อไปนี้:</textarea>
+            </div>
+
+            <div style="margin-top: 15px; text-align: right;"><label class="no-print" style="font-size:0.9em; margin:0; color:var(--gold); font-weight:600; cursor:pointer;"><input type="checkbox" id="auto_quote_text" checked onchange="syncQuoteData(true)"> ซิงค์ข้อความรายการสินค้าอัตโนมัติ</label></div>
+
+            <table class="quote-table" style="margin-top:15px; border-radius: 8px;">
+                <thead><tr><th style="width: 10%; text-align:center;">ลำดับ</th><th style="width: 50%;">รายการสินค้า (รายละเอียดทางวิศวกรรม)</th><th style="width: 15%; text-align:center;">จำนวน</th><th style="width: 25%; text-align:right;">จำนวนเงิน (บาท)</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align:center; font-weight:600;">1</td>
+                        <td><strong><span id="q_tank_title" style="color:var(--primary); font-size:1.1em;" contenteditable="true">ชุดถังกรองน้ำแรงดัน (Pressure Filter Tank)</span></strong><br><textarea id="q_spec_tank" style="border:none; background:transparent; padding:5px 0; color:#475569; font-size:0.95em;"></textarea></td>
+                        <td style="text-align:center; vertical-align:middle; font-weight:600;"><span id="q_tank_qty_label" contenteditable="true">1 Set</span></td>
+                        <td style="text-align:right; font-weight:700; vertical-align:middle; font-size:1.3em; color:var(--primary);" rowspan="2" id="q_final_price" contenteditable="true">0.00</td>
+                    </tr>
+                    <tr><td style="text-align:center; font-weight:600;">2</td><td><strong style="color:var(--primary); font-size:1.1em;" contenteditable="true">สารกรองน้ำ (Filter Media)</strong><br><textarea id="q_spec_media" style="border:none; background:transparent; padding:5px 0; color:#475569; font-size:0.95em;"></textarea></td><td style="text-align:center; vertical-align:middle; font-weight:600;" contenteditable="true">1 Lot</td></tr>
+                </tbody>
+            </table>
+
+            <div class="quote-summary-box">
+                <table>
+                    <tr><th style="font-size:1.1em;">มูลค่าสินค้ารวม (Sub Total):</th><td id="q_subtotal" style="font-size:1.1em;" contenteditable="true">0.00</td></tr>
+                    <tr><th style="font-size:1.1em;">ภาษีมูลค่าเพิ่ม (VAT 7%):</th><td style="font-weight:400;"><input type="checkbox" id="calc_vat" checked class="no-print" onchange="syncQuoteData(false)"> <span style="font-size:0.9em; color:#64748B;">รวม VAT แล้ว</span></td></tr>
+                    <tr><th style="padding-top:15px;"><h3 style="margin:0; color:var(--primary);">ราคาสุทธิ (Grand Total):</h3></th><td class="quote-grand-total" id="q_grand_total" contenteditable="true">0.00</td></tr>
+                </table>
+            </div><div style="clear:both;"></div>
+
+            <div class="quote-terms">
+                <strong style="color:var(--primary); font-size:1.1em;">เงื่อนไขการเสนอราคาและการชำระเงิน (Terms & Conditions):</strong>
+                <textarea id="q_terms_text" style="width:100%; border:none; background:transparent; font-size:1em; resize:none; overflow:hidden; color:#475569; padding-top:10px; font-family:'Prompt';" rows="6" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+            </div>
+
+            <div class="signature-area">
+                <div class="sign-box"><p style="margin:0;">( <input type="text" id="q_sign_eng" style="width:180px; text-align:center; border:none; border-bottom:1px dashed #94A3B8; font-weight:600; color:var(--primary);" value="Chakrit"> )</p><p style="margin:8px 0 0 0; font-size:0.95em; color:var(--secondary);">ผู้เสนอราคา (Prepared By)</p><p style="margin:0; font-size:0.85em; color:#64748B;"><span class="company_name_mirror">Chakrit WellGrow</span></p></div>
+                <div class="sign-box"><p style="margin:0;">(......................................................)</p><p style="margin:8px 0 0 0; font-size:0.95em; color:var(--secondary);">ผู้อนุมัติสั่งซื้อ (Accepted By)</p><p style="margin:0; font-size:0.85em; color:#64748B;">วันที่ (Date) ....../....../......</p></div>
+            </div>
+            <div class="no-print" style="margin-top:50px; text-align:center;"><button class="btn" style="background:var(--primary); color:var(--gold); font-size:1.2em; padding:15px 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.15);" onclick="printQuotation()">🖨️ พิมพ์ใบเสนอราคา</button></div>
+        </div>
+    </div>
+
+    <div id="p10" class="page">
+        <button class="btn btn-print no-print" onclick="printSinglePage('p10')">🖨️ พิมพ์คู่มือ O&M</button>
+        <div class="card" style="background: white; padding: 60px;">
+            <div class="no-print edit-hint" style="text-align:right; font-size:0.9em; color:var(--gold); font-weight:600; margin-bottom:15px;">✏️ สามารถคลิกที่ข้อความหรือตารางเพื่อพิมพ์แก้ไขข้อมูลได้อิสระก่อนสั่งพิมพ์</div>
+            <div style="text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 25px; margin-bottom: 35px;" contenteditable="true">
+                <h1 style="color: var(--primary); margin: 0; font-size: 2.2em; letter-spacing: 2px; text-transform: uppercase;"><span class="company_name_mirror" style="outline:none; border-bottom:1px dashed #ccc;" onblur="document.getElementById('q_company_name').value=this.innerText; triggerUpdate();">CHAKRIT WELLGROW</span></h1>
+                <h2 style="color: #475569; font-weight: 400; margin-top: 5px; font-size: 1.4em;">คู่มือการเดินระบบและบำรุงรักษา (Operation & Maintenance Manual)</h2>
+            </div>
+            
+            <h3 style="color: var(--primary); border-left: 5px solid var(--gold); padding-left: 15px;" contenteditable="true">1. ข้อมูลระบบ (System Specification)</h3>
+            <div id="om_spec_box" contenteditable="true" style="background: #F8FAFC; padding: 25px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 30px; line-height:1.9; color:#1E293B; outline:none;"></div>
+            
+            <h3 style="color: var(--primary); border-left: 5px solid var(--tech); padding-left: 15px;" contenteditable="true">2. ขั้นตอนการเริ่มเดินระบบ (Start-up & Air Bleeding)</h3>
+            <div contenteditable="true" style="background:#ECFEFF; padding:25px; border-radius:8px; border:1px solid #A5F3FC; color:#0E7490; line-height:1.8; margin-bottom: 30px; outline:none;">
+                <b>ข้อควรปฏิบัติก่อนเดินเครื่อง:</b><br>
+                1. ตรวจสอบให้แน่ใจว่าเปิดวาล์ว <b>"น้ำเข้า (Inlet)"</b> และวาล์ว <b>"ระบายอากาศ (Air Vent)"</b> บนหลังคาถังแล้ว<br>
+                2. ค่อยๆ เปิดปั๊มน้ำให้ทำงาน (ห้ามเปิดแรงสุดทันที เพื่อป้องกัน Water Hammer ขยี้ชั้นทราย)<br>
+                3. รอจนกว่าน้ำจะพุ่งทะลักออกจากท่อ Air Vent (แสดงว่าลมในถังถูกไล่ออกหมดแล้ว 100%)<br>
+                4. ปิดวาล์ว Air Vent และเปิดวาล์ว <b>"น้ำออก (Outlet)"</b> เพื่อจ่ายน้ำดีเข้าระบบได้ทันที
+            </div>
+
+            <h3 style="color: var(--primary); border-left: 5px solid var(--success); padding-left: 15px;" contenteditable="true">3. ขั้นตอนการล้างย้อน 3 จังหวะ (Backwash Procedure)</h3>
+            <div style="margin-bottom: 30px;"><div id="om_bw_plan" contenteditable="true" style="background:#F0FDF4; padding:25px; border-radius:8px; border:1px solid #BBF7D0; color:#15803D; line-height:1.8; outline:none;"></div></div>
+            
+            <h3 style="color: var(--primary); border-left: 5px solid #F59E0B; padding-left: 15px;" contenteditable="true">4. การบำรุงรักษาเชิงป้องกัน (Preventive Maintenance)</h3>
+            <table contenteditable="true" style="width: 100%; border-collapse: collapse; margin-bottom: 35px; outline:none; border-radius:8px;">
+                <thead><tr><th style="background:#FFF7ED; color:#C2410C; width:20%; text-align:center; border:1px solid #FFEDD5;">ระยะเวลา</th><th style="background:#FFF7ED; color:#C2410C; width:80%; border:1px solid #FFEDD5;">รายการตรวจสอบ (Checklist)</th></tr></thead>
+                <tbody id="om_maintenance_table"></tbody>
+            </table>
+
+            <h3 style="color: var(--primary); border-left: 5px solid var(--danger); padding-left: 15px;" contenteditable="true">5. รายการอะไหล่สำรองแนะนำสำหรับ 2 ปี (2-Year Spare Parts List)</h3>
+            <table contenteditable="true" style="width: 100%; border-collapse: collapse; margin-bottom: 35px; outline:none; border-radius:8px;">
+                <thead><tr><th style="background:var(--danger); color:white; width:10%; text-align:center; border:none;">ลำดับ</th><th style="background:var(--danger); color:white; width:70%; border:none;">รายการอะไหล่ (Part Description)</th><th style="background:var(--danger); color:white; text-align:center; width:20%; border:none;">จำนวนแนะนำ</th></tr></thead>
+                <tbody id="om_spare_parts"></tbody>
+            </table>
+            
+            <div contenteditable="true" style="background: #FFF7ED; border: 1px solid #FFEDD5; padding: 25px; border-radius: 10px; color: #C2410C; font-size: 0.95em; margin-top:40px; outline:none;">
+                <b style="font-size:1.1em;">⚠️ ข้อควรระวังด้านความปลอดภัย (Safety Warning):</b><br><br>
+                - ห้ามเดินปั๊มน้ำเข้าถังโดยที่วาล์วน้ำออกและวาล์วน้ำทิ้งปิดสนิททุกตัว เพราะจะทำให้เกิด Overpressure เกินค่ารับได้ของเหล็ก<br>
+                - ก่อนเปิดฝาแมนโฮลเพื่อถ่ายสารกรอง ต้องทำการหยุดปั๊ม เดรนน้ำ และเปิดวาล์วระบายอากาศไล่แรงดันให้เป็น 0 Bar ทุกครั้ง
+            </div>
+        </div>
+    </div>
+	<div id="p11" class="page">
+        <div style="text-align:right; margin-bottom:15px;" class="no-print">
+            <button class="btn btn-print" onclick="printSinglePage('p11')" style="background:#1E3A8A; color:white; border:none;">🖨️ พิมพ์ Design Report (ยื่น Consult)</button>
+        </div>
+        <div class="card" style="background:#fff; border:2px solid #000; padding:40px; color:#000; box-shadow:none; border-radius:0;">
+            <div class="no-print edit-hint" style="text-align:right; font-size:0.9em; color:var(--gold); font-weight:600; margin-bottom:15px;">✏️ สามารถคลิกที่ข้อมูลเพื่อแก้ไขตัวเลขทางวิศวกรรมได้ก่อนปริ้นต์</div>
+            <div style="text-align:center; border-bottom:3px solid #000; padding-bottom:15px; margin-bottom:25px;" contenteditable="true">
+                <h1 style="margin:0; font-size:1.5em; text-transform:uppercase;"><span class="company_name_mirror" style="outline:none;">CHAKRIT WELLGROW</span></h1>
+                <h1 style="margin:10px 0 0 0; font-size:2em; font-family: 'Times New Roman', serif;">DESIGN CALCULATION REPORT</h1>
+                <h3 style="margin:5px 0 0 0; font-weight:normal;">ASME BOILER AND PRESSURE VESSEL CODE SECTION VIII, DIV. 1</h3>
+            </div>
+            <table style="width:100%; border:none; margin-bottom:30px; font-size:1.1em; border-radius:0;" contenteditable="true">
+                <tr><td style="border:none; padding:5px;"><b>PROJECT:</b> <span id="rep_proj" class="editable-report-field"></span></td><td style="border:none; padding:5px;"><b>DATE:</b> <span id="rep_date" class="editable-report-field"></span></td></tr>
+                <tr><td style="border:none; padding:5px;"><b>CLIENT:</b> <span class="editable-report-field" style="min-width:200px;">___________________________</span></td><td style="border:none; padding:5px;"><b>EQUIPMENT:</b> PRESSURE FILTER TANK</td></tr>
+                <tr><td style="border:none; padding:5px;"><b>REVISION:</b> <span id="rep_rev" class="editable-report-field">00</span></td><td style="border:none; padding:5px;"><b>ITEM NO:</b> <span class="editable-report-field" style="min-width:200px;">___________________________</span></td></tr>
+            </table>
+
+            <h4 style="background:#eee; padding:8px; border:1px solid #000;" contenteditable="true">1. DESIGN DATA (ข้อมูลการออกแบบ)</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px; padding-left:15px; font-size:1.1em;" contenteditable="true">
+                <div>- Design Pressure (P): <b id="rep_p" class="editable-report-field"></b></div>
+                <div>- Design Temperature: <b class="editable-report-field">65 °C</b></div>
+                <div>- Inside Diameter (ID): <b id="rep_id" class="editable-report-field"></b></div>
+                <div>- Straight Shell Length (H): <b id="rep_h" class="editable-report-field"></b></div>
+                <div>- Material Spec: <b id="rep_mat" class="editable-report-field"></b></div>
+                <div>- Corrosion Allowance (CA): <b id="rep_ca" class="editable-report-field"></b></div>
+            </div>
+
+            <h4 style="background:#eee; padding:8px; border:1px solid #000;" contenteditable="true">2. THICKNESS CALCULATION SUMMARY (สรุปความหนา)</h4>
+            <table style="width:100%; border-collapse:collapse; text-align:center; border:1px solid #000; border-radius:0;" contenteditable="true">
+                <thead>
+                    <tr><th style="border:1px solid #000; background:#f9f9f9; text-align:center; color:#000;">Component</th><th style="border:1px solid #000; background:#f9f9f9; text-align:center; color:#000;">Required Thickness (mm)</th><th style="border:1px solid #000; background:#f9f9f9; text-align:center; color:#000;">Actual Thickness (mm)</th><th style="border:1px solid #000; background:#f9f9f9; text-align:center; color:#000;">Status</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td style="border:1px solid #000;">Cylindrical Shell</td><td style="border:1px solid #000;" id="rep_req_s" class="editable-report-field"></td><td style="border:1px solid #000;" id="rep_act_s" class="editable-report-field"></td><td style="border:1px solid #000;"><b>PASS</b></td></tr>
+                    <tr><td style="border:1px solid #000;">Top/Bottom Head</td><td style="border:1px solid #000;" id="rep_req_h" class="editable-report-field"></td><td style="border:1px solid #000;" id="rep_act_h" class="editable-report-field"></td><td style="border:1px solid #000;"><b>PASS</b></td></tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;" contenteditable="true">
+                <div style="width:250px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( <span id="rep_eng" class="editable-report-field"></span> )<br><b>Calculated By (Engineer)</b></div></div>
+                <div style="width:250px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( <span class="editable-report-field" style="min-width:150px;"></span> )<br><b>Approved By (PE)</b></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p12" class="page">
+        <div style="text-align:right; margin-bottom:15px;" class="no-print">
+            <button class="btn btn-print" onclick="printSinglePage('p12')" style="background:#0F766E; color:white; border:none;">🖨️ พิมพ์ QC Report (ตรวจสอบธรรมดา)</button>
+        </div>
+        <div class="card" style="background:#fff; border:2px solid #000; padding:40px; color:#000; box-shadow:none; border-radius:0;">
+            <div class="no-print edit-hint" style="text-align:right; font-size:0.9em; color:var(--gold); font-weight:600; margin-bottom:15px;">✏️ สามารถคลิกที่ตารางเพื่อพิมพ์แก้ไข หรือเติมวันที่ได้ก่อนปริ้นต์</div>
+            <div style="text-align:center; border-bottom:3px solid #000; padding-bottom:15px; margin-bottom:25px;" contenteditable="true">
+                <h1 style="margin:0; font-size:1.5em; text-transform:uppercase;"><span class="company_name_mirror" style="outline:none;">CHAKRIT WELLGROW</span></h1>
+                <h1 style="margin:10px 0 0 0; font-size:2em;">QUALITY CONTROL REPORT</h1>
+                <h3 style="margin:5px 0 0 0; font-weight:normal;">GENERAL VISUAL & DIMENSIONAL CHECK</h3>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:1.05em;" contenteditable="true">
+                <div><b>Project:</b> <span id="qc_proj_1" class="editable-report-field"></span></div>
+                <div><b>Date:</b> <span id="qc_date_1" class="editable-report-field"></span></div>
+            </div>
+
+            <table style="width:100%; border:1px solid #000; border-collapse:collapse; margin-bottom:30px; border-radius:0;" contenteditable="true">
+                <thead style="background:#f9f9f9;">
+                    <tr><th style="border:1px solid #000; width:5%; text-align:center; color:#000;">No.</th><th style="border:1px solid #000; width:55%; color:#000;">Checklist Item (รายการตรวจสอบ)</th><th style="border:1px solid #000; width:20%; text-align:center; color:#000;">Status (Pass/Fail)</th><th style="border:1px solid #000; width:20%; text-align:center; color:#000;">Remark</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td style="border:1px solid #000; text-align:center;">1</td><td style="border:1px solid #000;">ตรวจสอบขนาดมิติถังโดยรวม (Overall Dimension & ID/Height)</td><td style="border:1px solid #000; text-align:center;">PASS</td><td style="border:1px solid #000;"></td></tr>
+                    <tr><td style="border:1px solid #000; text-align:center;">2</td><td style="border:1px solid #000;">ตรวจสอบตำแหน่งท่อ และ Rating หน้าแปลน (Nozzle Orientation)</td><td style="border:1px solid #000; text-align:center;">PASS</td><td style="border:1px solid #000;"></td></tr>
+                    <tr><td style="border:1px solid #000; text-align:center;">3</td><td style="border:1px solid #000;">ตรวจสอบชุดกรองภายใน และจำนวนหัวกรอง (Internal Parts)</td><td style="border:1px solid #000; text-align:center;">PASS</td><td style="border:1px solid #000;"></td></tr>
+                    <tr><td style="border:1px solid #000; text-align:center;">4</td><td style="border:1px solid #000;">ตรวจสอบเฉดสี และความเรียบร้อยภายนอก (Surface & Color)</td><td style="border:1px solid #000; text-align:center;">PASS</td><td style="border:1px solid #000;"></td></tr>
+                    <tr><td style="border:1px solid #000; text-align:center;">5</td><td style="border:1px solid #000;">ตรวจสอบความสมบูรณ์ของประเก็นและน็อต (Gaskets & Bolts)</td><td style="border:1px solid #000; text-align:center;">PASS</td><td style="border:1px solid #000;"></td></tr>
+                </tbody>
+            </table>
+            
+            <div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;" contenteditable="true">
+                <div style="width:250px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( <span class="editable-report-field" style="min-width:150px;"></span> )<br><b>QC Inspector</b></div></div>
+                <div style="width:250px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( <span class="editable-report-field" style="min-width:150px;"></span> )<br><b>Client / Representative</b></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p13" class="page">
+        <div style="text-align:right; margin-bottom:15px;" class="no-print">
+            <button class="btn btn-print" onclick="printSinglePage('p13')" style="background:#064E3B; color:white; border:none;">🖨️ พิมพ์ QC Report (ITP เชิงลึก)</button>
+        </div>
+        <div class="card" style="background:#fff; border:2px solid #000; padding:40px; color:#000; box-shadow:none; border-radius:0;">
+            <div class="no-print edit-hint" style="text-align:right; font-size:0.9em; color:var(--gold); font-weight:600; margin-bottom:15px;">✏️ สามารถคลิกที่ตารางเพื่อพิมพ์แก้ไข หรือเติมวันที่ได้ก่อนปริ้นต์</div>
+            <div style="text-align:center; border-bottom:3px solid #000; padding-bottom:15px; margin-bottom:25px;" contenteditable="true">
+                <h1 style="margin:0; font-size:1.5em; text-transform:uppercase;"><span class="company_name_mirror" style="outline:none;">CHAKRIT WELLGROW</span></h1>
+                <h1 style="margin:10px 0 0 0; font-size:2em;">QUALITY CONTROL REPORT</h1>
+                <h3 style="margin:5px 0 0 0; font-weight:normal;">INSPECTION AND TEST PLAN (ITP)</h3>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:1.05em;" contenteditable="true">
+                <div><b>Project:</b> <span id="qc_proj_2" class="editable-report-field"></span></div>
+                <div><b>Date:</b> <span id="qc_date_2" class="editable-report-field"></span></div>
+            </div>
+
+            <table style="width:100%; border:1px solid #000; border-collapse:collapse; margin-bottom:20px; border-radius:0;" contenteditable="true">
+                <thead style="background:#f9f9f9;">
+                    <tr><th style="border:1px solid #000; width:5%; text-align:center; color:#000;">No.</th><th style="border:1px solid #000; width:40%; color:#000;">Inspection Item</th><th style="border:1px solid #000; width:20%; color:#000;">Acceptance Criteria</th><th style="border:1px solid #000; width:10%; text-align:center; color:#000;">Maker</th><th style="border:1px solid #000; width:10%; text-align:center; color:#000;">QC</th><th style="border:1px solid #000; width:15%; text-align:center; color:#000;">Client</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td style="border:1px solid #000; text-align:center;">1</td><td style="border:1px solid #000;">Material Receiving & Mill Certificate</td><td style="border:1px solid #000;">ASME / ASTM</td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td></tr>
+                    <tr><td style="border:1px solid #000; text-align:center;">2</td><td style="border:1px solid #000;">Fit-up & Visual Welding Inspection</td><td style="border:1px solid #000;">ASME Sec VIII</td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td></tr>
+                    <tr><td style="border:1px solid #000; text-align:center;">3</td><td style="border:1px solid #000;">Non-Destructive Test (NDT) <span id="qc_ndt"></span></td><td style="border:1px solid #000;">RT/PT Report</td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td></tr>
+                    <tr><td style="border:1px solid #000; text-align:center; background:#ECFDF5;">4</td><td style="border:1px solid #000; background:#ECFDF5;"><b>Hydrostatic Test @ <span id="qc_hydro"></span></b></td><td style="border:1px solid #000; background:#ECFDF5;"><b>Hold 30 Mins (No Leak)</b></td><td style="border:1px solid #000; background:#ECFDF5;"></td><td style="border:1px solid #000; background:#ECFDF5;"></td><td style="border:1px solid #000; background:#ECFDF5;"></td></tr>
+                    <tr><td style="border:1px solid #000; text-align:center;">5</td><td style="border:1px solid #000;">Painting DFT Inspection (300 µm)</td><td style="border:1px solid #000;">Elcometer >300 µm</td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td></tr>
+                </tbody>
+            </table>
+            <p style="color:#666; font-size:0.9em; text-align:right;">*M = Maker, Q = QC Inspector, C = Client / Consultant</p>
+        </div>
+    </div>
+
+    <div id="p14" class="page">
+        <div style="text-align:right; margin-bottom:15px;" class="no-print">
+            <button class="btn btn-print" onclick="printSinglePage('p14')" style="background:#0284C7; color:white; border:none;">🖨️ พิมพ์ใบ Certificate (Hydrotest)</button>
+        </div>
+        <div class="card" style="background:#fff; border:2px solid #000; padding:40px; color:#000; box-shadow:none; border-radius:0;">
+            <div class="no-print edit-hint" style="text-align:right; font-size:0.9em; color:var(--gold); font-weight:600; margin-bottom:15px;">✏️ คลิกที่ข้อความเพื่อแก้ไขข้อมูล หรือกดปุ่มอัปโหลดรูปเกจ์วัดแรงดันก่อน-หลัง</div>
+            <div style="text-align:center; border-bottom:3px solid #000; padding-bottom:15px; margin-bottom:25px;" contenteditable="true">
+                <h1 style="margin:0; font-size:1.5em; text-transform:uppercase;"><span class="company_name_mirror" style="outline:none;">CHAKRIT WELLGROW</span></h1>
+                <h1 style="margin:10px 0 0 0; font-size:2em; font-family: 'Times New Roman', serif;">HYDROSTATIC TEST CERTIFICATE</h1>
+            </div>
+            
+            <table style="width:100%; border:none; margin-bottom:30px; font-size:1.1em; border-radius:0;" contenteditable="true">
+                <tr><td style="border:none; padding:5px;"><b>PROJECT:</b> <span id="ht_proj" class="editable-report-field"></span></td><td style="border:none; padding:5px;"><b>DATE OF TEST:</b> <span id="ht_date" class="editable-report-field"></span></td></tr>
+                <tr><td style="border:none; padding:5px;"><b>CLIENT:</b> <span class="editable-report-field" style="min-width:200px;">___________________________</span></td><td style="border:none; padding:5px;"><b>EQUIPMENT:</b> PRESSURE FILTER TANK</td></tr>
+                <tr><td style="border:none; padding:5px;"><b>TEST MEDIUM:</b> POTABLE WATER / CLEAN WATER</td><td style="border:none; padding:5px;"><b>WATER TEMP:</b> AMBIENT</td></tr>
+            </table>
+
+            <h4 style="background:#eee; padding:8px; border:1px solid #000;" contenteditable="true">TEST PARAMETERS & RESULTS (ข้อมูลและผลการทดสอบ)</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px; padding-left:15px; font-size:1.1em;" contenteditable="true">
+                <div>- Design Pressure: <b id="ht_dp" class="editable-report-field"></b></div>
+                <div>- Holding Time: <b class="editable-report-field">30 Minutes</b></div>
+                <div>- <span style="color:var(--danger); font-weight:bold;">Test Pressure (1.3x): <b id="ht_tp" class="editable-report-field"></b></span></div>
+                <div>- Pressure Drop: <b class="editable-report-field">0 BAR (No Drop)</b></div>
+                <div style="grid-column: span 2; margin-top: 10px;">
+                    - Test Result: <b class="editable-report-field" style="color:var(--success); font-size:1.2em; background:#ECFDF5; padding:5px 10px; border-radius:4px;">PASS (No Leakage or Deformation Found)</b>
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
+                <div style="border:1px dashed #000; padding:15px; text-align:center; position:relative; min-height: 250px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <b contenteditable="true" style="margin-bottom:10px;">BEFORE TEST (เริ่มอัดแรงดัน)</b>
+                    <input type="file" accept="image/*" class="no-print" style="margin-bottom:10px; width:auto;" onchange="previewImage(this, 'img_before')">
+                    <img id="img_before" style="max-width:100%; max-height:220px; display:none; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div style="border:1px dashed #000; padding:15px; text-align:center; position:relative; min-height: 250px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <b contenteditable="true" style="margin-bottom:10px;">AFTER TEST (ครบกำหนดเวลา)</b>
+                    <input type="file" accept="image/*" class="no-print" style="margin-bottom:10px; width:auto;" onchange="previewImage(this, 'img_after')">
+                    <img id="img_after" style="max-width:100%; max-height:220px; display:none; border:1px solid #ccc; border-radius:4px;">
+                </div>
+            </div>
+
+            <div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;" contenteditable="true">
+                <div style="width:200px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( <span id="ht_eng" class="editable-report-field"></span> )<br><b>Tested By (QC/Engineer)</b></div></div>
+                <div style="width:200px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( _____________________ )<br><b>Witnessed By (Client/Owner)</b></div></div>
+                <div style="width:200px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( _____________________ )<br><b>Approved By (Manager)</b></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p15" class="page">
+        <div style="text-align:right; margin-bottom:15px;" class="no-print">
+            <button class="btn btn-print" onclick="printSinglePage('p15')" style="background:#1E3A8A; color:white; border:none;">🖨️ พิมพ์ใบสั่งซื้อ (PO)</button>
+        </div>
+        <div class="card quote-container" style="border-radius:0;">
+            <div style="text-align:center; border-bottom:3px double #1E3A8A; padding-bottom:15px; margin-bottom:20px;" contenteditable="true">
+                <h1 style="color:#1E3A8A; margin:0; font-size:2.2em; letter-spacing:2px;"><span class="company_name_mirror" style="outline:none;">CHAKRIT WELLGROW</span></h1>
+                <h2 style="margin:5px 0 0 0; color:#333; font-weight:400;">ใบสั่งซื้อสินค้า (PURCHASE ORDER)</h2>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:1.1em;">
+                <div style="width:50%;">
+                    <b>สั่งซื้อจาก (Supplier):</b><br>
+                    <textarea contenteditable="true" style="width:100%; border:1px dashed #ccc; background:#F8FAFC; height:80px; resize:none;">บริษัท ผู้ขายเหล็ก/อุปกรณ์ จำกัด&#10;ที่อยู่: ...</textarea>
+                </div>
+                <div style="width:40%; text-align:right;" contenteditable="true">
+                    <b>PO No.:</b> <span class="editable-report-field" style="min-width:100px;">PO-2026-001</span><br>
+                    <b>Date:</b> <span id="po_date" class="editable-report-field">--/--/----</span><br>
+                    <b>อ้างอิงโครงการ:</b> <span id="po_proj_name" class="editable-report-field" contenteditable="true">...</span>
+                </div>
+            </div>
+            <table style="width:100%; border-collapse:collapse; text-align:left; border:1px solid #000; border-radius:0;">
+                <thead style="background:#1E3A8A; color:white;">
+                    <tr><th style="padding:10px; border:1px solid #000; text-align:center; width:10%;">ลำดับ</th><th style="padding:10px; border:1px solid #000;">รายการ (Description)</th><th style="padding:10px; border:1px solid #000; text-align:center; width:15%;">จำนวน</th><th style="padding:10px; border:1px solid #000; text-align:center; width:20%;">หมายเหตุ</th></tr>
+                </thead>
+                <tbody contenteditable="true" id="po_body" style="background:#fff; color:#000;">
+                    </tbody>
+            </table>
+            <div style="margin-top:80px; display:flex; justify-content:space-between; text-align:center;" contenteditable="true">
+                <div style="width:250px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( <span id="po_eng" class="editable-report-field"></span> )<br><b>ผู้จัดทำ (Prepared By)</b></div></div>
+                <div style="width:250px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( _____________________ )<br><b>ผู้อนุมัติ (Authorized By)</b></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p16" class="page">
+        <div style="text-align:right; margin-bottom:15px;" class="no-print">
+            <button class="btn btn-print" onclick="printSinglePage('p16')" style="background:#854D0E; color:white; border:none;">🖨️ พิมพ์ใบแจ้งหนี้ (Invoice)</button>
+        </div>
+        <div class="card quote-container" style="border-radius:0;">
+            <div style="text-align:center; border-bottom:3px double #854D0E; padding-bottom:15px; margin-bottom:20px;" contenteditable="true">
+                <h1 style="color:#854D0E; margin:0; font-size:2.2em; letter-spacing:2px;"><span class="company_name_mirror" style="outline:none;">CHAKRIT WELLGROW</span></h1>
+                <h2 style="margin:5px 0 0 0; color:#333; font-weight:400;">ใบแจ้งหนี้ / ใบวางบิล (INVOICE)</h2>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:1.1em;">
+                <div style="width:50%;">
+                    <b>ลูกค้า (Customer):</b><br>
+                    <textarea id="inv_cust" contenteditable="true" style="width:100%; border:1px dashed #ccc; background:#F8FAFC; height:80px; resize:none;">...</textarea>
+                </div>
+                <div style="width:40%; text-align:right;" contenteditable="true">
+                    <b>INV No.:</b> <span class="editable-report-field" style="min-width:100px;">INV-2026-001</span><br>
+                    <b>Date:</b> <span id="inv_date" class="editable-report-field">--/--/----</span><br>
+                    <b>อ้างอิงใบเสนอราคา:</b> <span id="inv_q_no" class="editable-report-field">...</span>
+                </div>
+            </div>
+            <table style="width:100%; border-collapse:collapse; text-align:left; border:1px solid #000; border-radius:0;">
+                <thead style="background:#854D0E; color:white;">
+                    <tr><th style="padding:10px; border:1px solid #000; text-align:center; width:10%;">ลำดับ</th><th style="padding:10px; border:1px solid #000;">รายละเอียด (Description)</th><th style="padding:10px; border:1px solid #000; text-align:center; width:15%;">งวดที่</th><th style="padding:10px; border:1px solid #000; text-align:right; width:25%;">จำนวนเงิน (THB)</th></tr>
+                </thead>
+                <tbody contenteditable="true" id="inv_body" style="background:#fff; color:#000;">
+                    </tbody>
+            </table>
+            <div style="margin-top:20px; text-align:right; font-size:1.4em;" contenteditable="true">
+                <b>ยอดรวมทั้งสิ้น (Grand Total): <span id="inv_total_due" style="color:var(--danger); border-bottom:2px solid var(--danger);">0.00</span> บาท</b>
+            </div>
+            <div style="margin-top:30px; font-size:0.95em; color:#475569; border:1px solid #CBD5E1; padding:20px; border-radius:8px; background:#F8FAFC;">
+                <b style="color:var(--primary);">เงื่อนไขการรับประกัน (Warranty Terms):</b><br>
+                <div contenteditable="true" style="outline:none; margin-top:5px; line-height:1.8;">
+                    1. บริษัทฯ รับประกันโครงสร้างถังกรองและรอยเชื่อม เป็นระยะเวลา <b>1 ปี (12 เดือน)</b> นับจากวันส่งมอบงาน<br>
+                    2. การรับประกันไม่ครอบคลุมถึงอุปกรณ์สิ้นเปลือง (สารกรอง, ปะเก็น) และความเสียหายจากการใช้งานผิดประเภท<br>
+                    3. การชำระเงินล่าช้ากว่ากำหนด อาจส่งผลต่อการระงับการให้บริการรับประกันชั่วคราว
+                </div>
+            </div>
+            <div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center;" contenteditable="true">
+                <div style="width:250px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( <span class="company_name_mirror"></span> )<br><b>ผู้วางบิล / ผู้รับมอบอำนาจ</b></div></div>
+                <div style="width:250px;"><div style="border-bottom:1px solid #000; height:30px; margin-bottom:5px;"></div><div>( _____________________ )<br><b>ผู้รับบิล / ลูกค้า</b></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p17" class="page">
+        <div class="card" style="border-color:var(--admin); background: #F8FAFC;">
+            <h3 style="color:var(--admin); border-left-color:var(--admin);">⚙️ SYSTEM USER MANAGEMENT (ฐานข้อมูลผู้ใช้งาน)</h3>
+            <div style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #E2E8F0; margin-bottom: 25px; color: #475569;">
+                <b>วิธีใช้งานสำหรับ Admin:</b> 🚨 <span style="color:var(--danger); font-weight:600;">สำคัญ: เมื่อแก้ไขเสร็จ ต้องกดปุ่ม "💾 บันทึกฐานข้อมูล" สีเขียวด้านล่างทุกครั้ง!</span>
+            </div>
+            <table id="admin-user-table" style="background: white;">
+                <thead>
+                    <tr>
+                        <th style="width: 15%; background: var(--admin); color: white;">Username</th>
+                        <th style="width: 15%; background: var(--admin); color: white;">Password</th>
+                        <th style="width: 25%; background: var(--admin); color: white;">ชื่อ-ตำแหน่ง</th>
+                        <th style="width: 20%; text-align:center; background: var(--admin); color: white;">วันหมดอายุ (Expire)</th>
+                        <th style="width: 15%; text-align:center; background: var(--admin); color: white;">สิทธิ์ (Role)</th>
+                        <th style="width: 10%; text-align:center; background: var(--admin); color: white;">ลบ</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-user-body"></tbody>
+            </table>
+            <div style="margin-top: 25px; display: flex; gap: 15px;">
+                <button class="btn" style="background:white; color:var(--primary); border:2px solid var(--primary);" onclick="adminAddUserRow()">+ เพิ่มพนักงานใหม่</button>
+                <button class="btn" style="background:var(--success); color:white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);" onclick="adminSaveUsers()">💾 บันทึกฐานข้อมูลผู้ใช้เข้าสู่ระบบ (Save DB)</button>
+            </div>
+            <div id="admin_save_msg" style="color: var(--success); font-weight: 700; margin-top: 15px; display: none; background: #ECFDF5; padding: 12px; border-radius: 6px; border: 1px solid #A5D6A7; text-align: center;">✅ บันทึกฐานข้อมูลผู้ใช้งานสำเร็จ! ข้อมูลจะอัปเดตในการล็อกอินครั้งถัดไป</div>
+        </div>
+    </div>
+
+    <div id="p18" class="page">
+        <div class="card" style="border-color:var(--primary); background: #F8FAFC; max-width: 600px; margin: 0 auto;">
+            <h3 style="color:var(--primary); border-left-color:var(--primary); text-align: center;">👤 ข้อมูลส่วนตัว (My Profile)</h3>
+            
+            <div style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 25px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="width: 80px; height: 80px; background: var(--gold); color: var(--primary); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 2.5em; font-weight: bold; margin-bottom: 10px;" id="profile_avatar">U</div>
+                    <h2 style="margin: 0; color: var(--primary);" id="profile_fullname">ชื่อ-นามสกุล</h2>
+                    <span style="background: #E2E8F0; color: #475569; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600;" id="profile_role">Role</span>
+                </div>
+
+                <table style="width: 100%; border: none; margin-bottom: 30px;">
+                    <tr><td style="border: none; padding: 10px 0; color: #64748B; width: 40%;">Username:</td><td style="border: none; padding: 10px 0; font-weight: bold;" id="profile_username">...</td></tr>
+                    <tr><td style="border: none; padding: 10px 0; color: #64748B;">วันหมดอายุบัญชี:</td><td style="border: none; padding: 10px 0; font-weight: bold; color: var(--danger);" id="profile_expire">...</td></tr>
+                </table>
+
+                <div style="border-top: 1px dashed #CBD5E1; padding-top: 20px;">
+                    <h4 style="margin-top: 0; color: var(--secondary);">🔐 เปลี่ยนรหัสผ่าน (Change Password)</h4>
+                    <label>รหัสผ่านเดิม (Current Password):</label>
+                    <input type="password" id="prof_old_pass" placeholder="••••••••">
+                    <label>รหัสผ่านใหม่ (New Password):</label>
+                    <input type="password" id="prof_new_pass" placeholder="ตั้งรหัสผ่านใหม่">
+                    <button class="btn" style="background: var(--primary); color: white; width: 100%; margin-top: 15px;" onclick="changeMyPassword()">อัปเดตรหัสผ่าน</button>
+                    <div id="prof_msg" style="margin-top: 10px; font-weight: 600; text-align: center; display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /**
+     * ========================================================================
+     * 1. 👥 ADMIN & MULTI-USER LOGIN SYSTEM (WEB API / FLASK)
+     * ========================================================================
+     */
+    let userDatabase = [];
+    let currentUserSession = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // ดึงข้อมูลผ่าน Web API ทันทีที่เปิดเว็บ
+        fetch('/api/users')
+            .then(res => res.json())
+            .then(users => {
+                if (users && users.length > 0) {
+                    userDatabase = users;
+                    console.log("✅ โหลดฐานข้อมูล Cloud ผ่าน Web API สำเร็จ!");
+                }
+            }).catch(err => console.error("❌ API Fetch Error:", err));
+
+        const passInput = document.getElementById('sys_password');
+        const userInput = document.getElementById('sys_username');
+        if (passInput && userInput) {
+            passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') checkLogin(); });
+            userInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') passInput.focus(); });
+            userInput.focus();
+        }
+    });
+
+    async function checkLogin() {
+        const inputUser = document.getElementById('sys_username').value.trim();
+        const inputPass = document.getElementById('sys_password').value.trim();
+        const errBox = document.getElementById('login_error');
+        
+        try {
+            const response = await fetch('/api/users');
+            userDatabase = await response.json();
+        } catch (err) { console.error("API Error:", err); }
+
+        const matchedUser = userDatabase.find(u => u.user === inputUser && u.pass === inputPass);
+
+        if (matchedUser) {
+            const todayDate = new Date().toISOString().split('T')[0];
+            if (matchedUser.expire_date && matchedUser.expire_date < todayDate) {
+                errBox.innerHTML = `❌ บัญชีของคุณหมดอายุการใช้งานแล้ว (เมื่อ ${matchedUser.expire_date})<br>กรุณาติดต่อ Engineering Director`;
+                errBox.style.display = 'block';
+                document.getElementById('sys_password').value = '';
+                return;
+            }
+
+            currentUserSession = matchedUser;
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('eng_name').value = matchedUser.name;
+            errBox.style.display = 'none';
+            document.getElementById('tab_profile').style.display = 'block';
+            document.getElementById('profile_fullname').innerText = matchedUser.name;
+            document.getElementById('profile_username').innerText = matchedUser.user;
+            document.getElementById('profile_role').innerText = matchedUser.role === 'admin' ? 'System Administrator' : 'Engineering User';
+            document.getElementById('profile_expire').innerText = matchedUser.expire_date || 'ไม่จำกัด (Unlimited)';
+            document.getElementById('profile_avatar').innerText = matchedUser.name.charAt(0).toUpperCase();
+
+            const adminTab = document.getElementById('tab_admin');
+            if (matchedUser.role === 'admin') {
+                adminTab.style.display = 'block'; renderAdminTable(); 
+            } else { adminTab.style.display = 'none'; }
+            
+            setPage(1); triggerUpdate(); 
+        } else {
+            errBox.innerHTML = "❌ Access Denied. Invalid Credentials.";
+            errBox.style.display = 'block';
+            document.getElementById('sys_password').value = ''; document.getElementById('sys_password').focus();
+        }
+    }
+
+    function logoutSystem() {
+        const overlay = document.getElementById('login-overlay');
+        if (overlay) {
+            currentUserSession = null;
+            document.getElementById('tab_profile').style.display = 'none';
+            overlay.style.display = 'flex';
+            document.getElementById('sys_username').value = '';
+            document.getElementById('sys_password').value = '';
+            document.getElementById('login_error').style.display = 'none';
+            document.getElementById('sys_username').focus();
+            document.getElementById('tab_admin').style.display = 'none';
+            setPage(1);
+        }
+    }
+
+    function changeMyPassword() {
+        if (!currentUserSession) return;
+        const oldPass = document.getElementById('prof_old_pass').value;
+        const newPass = document.getElementById('prof_new_pass').value;
+        const msgBox = document.getElementById('prof_msg');
+        
+        if (!oldPass || !newPass) {
+            msgBox.innerHTML = "⚠️ กรุณากรอกรหัสผ่านให้ครบถ้วน"; msgBox.style.color = "var(--warning)"; msgBox.style.display = "block"; return;
+        }
+
+        fetch('/api/change_password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUserSession.user, old_password: oldPass, new_password: newPass })
+        }).then(res => res.json()).then(response => {
+            msgBox.style.display = "block";
+            if (response.status === "success") {
+                msgBox.innerHTML = "✅ " + response.message; msgBox.style.color = "var(--success)";
+                document.getElementById('prof_old_pass').value = ''; document.getElementById('prof_new_pass').value = '';
+                currentUserSession.pass = newPass;
+            } else {
+                msgBox.innerHTML = "❌ " + response.message; msgBox.style.color = "var(--danger)";
+            }
+            setTimeout(() => { msgBox.style.display = 'none'; }, 3000);
+        });
+    }
+
+    function renderAdminTable() {
+        const tbody = document.getElementById('admin-user-body'); 
+        if (!tbody) return;
+        let html = '';
+        userDatabase.forEach((u, index) => {
+            html += `
+            <tr>
+                <td><input type="text" class="editable-input" value="${u.user}" style="background:#fff !important;"></td>
+                <td><input type="text" class="editable-input" value="${u.pass}" style="background:#fff !important; color: var(--danger); letter-spacing:2px;"></td>
+                <td><input type="text" class="editable-input" value="${u.name}" style="background:#fff !important; text-align:left;"></td>
+                <td><input type="date" class="editable-input" value="${u.expire_date || '2099-12-31'}" style="background:#fff !important; font-family:'Prompt';"></td>
+                <td>
+                    <select style="padding:12px; margin:0; font-weight:600; color:var(--primary); border:1px solid #CBD5E1; border-radius:8px;">
+                        <option value="user" ${u.role === 'user' ? 'selected' : ''}>User ทั่วไป</option>
+                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin ผู้ดูแล</option>
+                    </select>
+                </td>
+                <td style="text-align:center;"><button class="btn btn-del" onclick="adminRemoveRow(this)">ลบทิ้ง</button></td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function adminAddUserRow() {
+        const tbody = document.getElementById('admin-user-body'); 
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" class="editable-input" value="new_user" style="background:#fff !important;"></td>
+            <td><input type="text" class="editable-input" value="1234" style="background:#fff !important; color: var(--danger); letter-spacing:2px;"></td>
+            <td><input type="text" class="editable-input" value="พนักงานใหม่" style="background:#fff !important; text-align:left;"></td>
+            <td><input type="date" class="editable-input" value="2099-12-31" style="background:#fff !important; font-family:'Prompt';"></td>
+            <td>
+                <select style="padding:12px; margin:0; font-weight:600; color:var(--primary); border:1px solid #CBD5E1; border-radius:8px;">
+                    <option value="user" selected>User ทั่วไป</option>
+                    <option value="admin">Admin ผู้ดูแล</option>
+                </select>
+            </td>
+            <td style="text-align:center;"><button class="btn btn-del" onclick="adminRemoveRow(this)">ลบทิ้ง</button></td>`;
+        tbody.appendChild(tr);
+    }
+
+    function adminRemoveRow(btn) { btn.parentElement.parentElement.remove(); }
+
+    function adminSaveUsers() {
+        try {
+            const rows = document.getElementById('admin-user-body').querySelectorAll('tr'); 
+            let newDB = [];
+            rows.forEach(tr => {
+                const inputs = tr.querySelectorAll('input'); 
+                const select = tr.querySelector('select');
+                if (inputs.length >= 4) {
+                    newDB.push({ user: inputs[0].value.trim(), pass: inputs[1].value.trim(), name: inputs[2].value.trim(), expire_date: inputs[3].value, role: select.value });
+                }
+            });
+            if (newDB.length === 0) { alert("⚠️ ต้องมีพนักงานในระบบอย่างน้อย 1 คน!"); return; }
+            
+            fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newDB)
+            }).then(res => res.json()).then(response => {
+                if(response.status === "success") {
+                    userDatabase = newDB; 
+                    const msg = document.getElementById('admin_save_msg'); 
+                    msg.style.display = 'block'; 
+                    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+                } else { alert("❌ API Error: " + response.message); }
+            }).catch(e => alert("❌ Network Connection Error"));
+        } catch(e) { alert("❌ เกิดข้อผิดพลาดในการดึงข้อมูลจากตาราง"); }
+    }
+
+    /**
+     * ========================================================================
+     * 2. 📸 IMAGE PREVIEW FOR HYDROTEST
+     * ========================================================================
+     */
+    function previewImage(input, targetId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById(targetId);
+                img.src = e.target.result;
+                img.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    /**
+     * ========================================================================
+     * 3. 🚀 THE APEX AUTO-LOGGER
+     * ========================================================================
+     */
+    const GOOGLE_SHEET_URL = "ใส่_URL_ของคุณตรงนี้"; 
+
+    function logToDatabase(actionName) {
+        try {
+            if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL === "ใส่_URL_ของคุณตรงนี้") return;
+            const now = new Date();
+            const payload = { 
+                date: now.toLocaleDateString('th-TH'), 
+                time: now.toLocaleTimeString('th-TH'), 
+                user: document.getElementById('eng_name')?.value || "Unknown", 
+                project: document.getElementById('proj_name')?.value || "No Name", 
+                price: document.getElementById('grand_total')?.innerText || "0.00", 
+                action: actionName 
+            };
+            fetch(GOOGLE_SHEET_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(e => console.log("Logging Ignored"));
+        } catch(e) {}
+    }
+
+    /**
+     * ========================================================================
+     * 4. ⚙️ ENGINEERING CORE LOGIC & VARIABLES
+     * ========================================================================
+     */
+    let global_pipe = '3"'; 
+    let global_manhole_in = '20"'; 
+    let global_manhole_mm = 500; 
+    window.current_manhole_count = 3; 
+    let costChartInstance = null;
+
+    function getFloat(id, fallback = 0) { 
+        try { 
+            const el = document.getElementById(id); 
+            if (!el || el.value.trim() === '') return fallback; 
+            const val = parseFloat(el.value); 
+            return isNaN(val) ? fallback : val; 
+        } catch(e) { return fallback; } 
+    }
+    
+    const DOM = {
+        setHTML: function(id, htmlStr) { try { const el = document.getElementById(id); if (el) el.innerHTML = htmlStr; } catch(e) {} },
+        setText: function(id, textStr) { try { const el = document.getElementById(id); if (el) el.innerText = textStr; } catch(e) {} },
+        setVal: function(id, val) { try { const el = document.getElementById(id); if (el) el.value = val; } catch(e) {} }
+    };
+
+    function setStatus(isError) { 
+        try { 
+            const ind = document.getElementById('status-indicator'); 
+            if (!ind) return; 
+            if (isError) { 
+                ind.className = "sys-status error"; ind.innerHTML = "🔴 Auto-Recovering from Error..."; 
+                ind.style.background = "rgba(239, 68, 68, 0.1)"; ind.style.color = "var(--danger)";
+            } else { 
+                ind.className = "sys-status"; ind.innerHTML = "🟢 System Online & Stable"; 
+                ind.style.background = "rgba(16, 185, 129, 0.1)"; ind.style.color = "var(--success)";
+            } 
+        } catch(e) {} 
+    }
+
+    function updateTimestamp() {
+        try {
+            const d = new Date(); 
+            const currentUser = document.getElementById('eng_name')?.value || "Unknown User";
+            DOM.setText('timestamp_display', `พิมพ์เมื่อ: ${d.toLocaleString('th-TH')} | พิมพ์โดย: ${currentUser}`);
+            DOM.setText('q_date', d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }));
+            
+            const y = d.getFullYear(); 
+            const m = String(d.getMonth() + 1).padStart(2, '0'); 
+            const day = String(d.getDate()).padStart(2, '0');
+            DOM.setText('q_no', `QW-${y}${m}${day}-01`); 
+            DOM.setText('np_year', y);
+            
+            const cname = document.getElementById('q_company_name')?.value || "CHAKRIT WELLGROW";
+            document.querySelectorAll('.company_name_mirror').forEach(el => {
+                if (el.tagName === 'SPAN' || el.tagName === 'DIV') el.innerText = cname;
+                else el.value = cname;
+            });
+            
+            const termArea = document.getElementById('q_terms_text'); 
+            if (termArea) { termArea.style.height = ''; termArea.style.height = termArea.scrollHeight + 'px'; }
+            
+            const covArea = document.getElementById('q_cover_letter'); 
+            if (covArea) { covArea.style.height = ''; covArea.style.height = covArea.scrollHeight + 'px'; }
+        } catch(e) {}
+    }
+
+    function setPage(n) {
+        try {
+            document.querySelectorAll('.page, .tab').forEach(el => el.classList.remove('active'));
+            const targetPage = document.getElementById('p'+n); 
+            if (targetPage) targetPage.classList.add('active');
+            const targetTab = document.querySelectorAll('.tab')[n - 1]; 
+            if (targetTab) targetTab.classList.add('active');
+            
+            if (n === 7) { setTimeout(() => { try { if (costChartInstance) costChartInstance.resize(); } catch(e){} }, 100); }
+            if (n >= 7 && n <= 17) syncQuoteData(true);
+        } catch(e) {}
+    }
+
+    /**
+     * ========================================================================
+     * 5. 🖨️ NATIVE PRINT & EXPORT SYSTEM
+     * ========================================================================
+     */
+    window.addEventListener('beforeprint', () => {
+        const activePage = document.querySelector('.page.active');
+        if (activePage) {
+            const pageNum = parseInt(activePage.id.replace('p', ''));
+            const projHeader = document.getElementById('proj-head');
+            if (pageNum >= 9 && pageNum <= 16) {
+                if (projHeader) projHeader.style.display = 'none';
+            } else {
+                if (projHeader) projHeader.style.display = 'block';
+            }
+        }
+    });
+
+    window.addEventListener('afterprint', () => {
+        const projHeader = document.getElementById('proj-head');
+        if (projHeader) projHeader.style.display = 'block';
+    });
+
+    function printSinglePage(pid) {
+        try {
+            updateTimestamp();
+            document.querySelectorAll('.page').forEach(p => { if(p.id !== pid) p.style.display = 'none'; });
+            window.print();
+            document.querySelectorAll('.page').forEach(p => { p.style.display = ''; });
+            setPage(parseInt(pid.replace('p', '')));
+        } catch(e) { console.error(e); }
+    }
+
+    function printQuotation() {
+        try {
+            logToDatabase("พิมพ์ใบเสนอราคา (Quotation)");
+            syncQuoteData(true);
+            printSinglePage('p9');
+        } catch(e) {}
+    }
+
+    function printNameplate() {
+        try {
+            document.body.classList.add('printing-nameplate');
+            window.print();
+            document.body.classList.remove('printing-nameplate');
+        } catch(e) {}
+    }
+
+    function exportExcel() { 
+        try { 
+            let table = document.getElementById("boq-master").cloneNode(true); 
+            table.querySelectorAll('input').forEach(i => i.parentElement.innerText = i.value); 
+            XLSX.writeFile(XLSX.utils.table_to_book(table, {sheet: "Enterprise_BOQ"}), "CWG_Enterprise_BOQ_Report.xlsx"); 
+        } catch(e) { alert("⚠️ โหลดไลบรารี Excel ไม่สำเร็จ"); } 
+    }
+
+    function exportActivePageToExcel() {
+        try {
+            const activePage = document.querySelector('.page.active');
+            if (!activePage) return;
+            const tables = activePage.querySelectorAll('table');
+            if (tables.length === 0) return;
+            const wb = XLSX.utils.book_new();
+            tables.forEach((table, index) => {
+                let cloneTable = table.cloneNode(true);
+                cloneTable.querySelectorAll('input, textarea, select').forEach(el => {
+                    let text = el.tagName === 'SELECT' ? el.options[el.selectedIndex].text : el.value;
+                    let span = document.createElement('span');
+                    span.innerText = text;
+                    el.parentNode.replaceChild(span, el);
+                });
+                let ws = XLSX.utils.table_to_sheet(cloneTable);
+                XLSX.utils.book_append_sheet(wb, ws, `Table_0${index + 1}`);
+            });
+            const tabIndex = Array.from(document.querySelectorAll('.page')).indexOf(activePage) + 1;
+            XLSX.writeFile(wb, `CWG_Report_Tab${tabIndex}_Export.xlsx`);
+        } catch(e) { alert("⚠️ เกิดข้อผิดพลาดในการ Export Excel"); }
+    }
+
+    function gatherProjectData() { 
+        let data = {}; 
+        document.querySelectorAll('input, select, textarea').forEach(el => { 
+            if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; 
+        }); 
+        return data; 
+    }
+    function applyProjectData(data) { 
+        Object.keys(data).forEach(key => { 
+            const el = document.getElementById(key); 
+            if (el) { 
+                if (el.type === 'checkbox') el.checked = data[key]; 
+                else el.value = data[key]; 
+            } 
+        }); 
+        triggerUpdate(); 
+    }
+    function saveProjectData(isAutoSave = false) { 
+        try { 
+            localStorage.setItem('filterTankProject_masterpiece', JSON.stringify(gatherProjectData())); 
+            if (!isAutoSave) { alert("☁️ สำรองข้อมูลโปรเจกต์สำเร็จ!"); logToDatabase("กดบันทึกโปรเจกต์ (Save JSON)"); }
+        } catch(e) {} 
+    }
+    function loadProjectData() { 
+        try { 
+            const saved = localStorage.getItem('filterTankProject_masterpiece'); 
+            if (saved) { applyProjectData(JSON.parse(saved)); alert("☁️ เรียกคืนข้อมูลโปรเจกต์สำเร็จ!"); } 
+            else alert("⚠️ ไม่พบข้อมูลที่บันทึกไว้"); 
+        } catch(e) {} 
+    }
+    function exportProjectFile() { 
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gatherProjectData())); 
+        const a = document.createElement('a'); a.href = dataStr; a.download = "Chakrit_ERP_Project_Backup.json"; document.body.appendChild(a); a.click(); a.remove(); 
+    }
+    function importProjectFile(event) { 
+        const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); 
+        reader.onload = function(e) { try { applyProjectData(JSON.parse(e.target.result)); alert("📂 เปิดไฟล์โปรเจกต์ JSON สำเร็จ!"); } catch(err) { alert("❌ รูปแบบไฟล์ไม่ถูกต้อง"); } }; 
+        reader.readAsText(file); 
+    }
+
+    /**
+     * ========================================================================
+     * 6. 🕒 AUTO-SAVE & ANTI-PIRACY
+     * ========================================================================
+     */
+    setInterval(() => {
+        const overlay = document.getElementById('login-overlay');
+        if (overlay && overlay.style.display === 'none') { saveProjectData(true); }
+    }, 60000); 
+
+    document.addEventListener('contextmenu', event => { event.preventDefault(); });
+    document.addEventListener('copy', event => {
+        const activeElement = document.activeElement.tagName;
+        if (activeElement !== 'INPUT' && activeElement !== 'TEXTAREA' && !document.activeElement.isContentEditable) {
+            event.preventDefault();
+        }
+    });
+
+    /**
+     * ========================================================================
+     * 7. 🧊 3D INTERACTIVE TANK VIEWER (THREE.JS)
+     * ========================================================================
+     */
+    let scene, camera, renderer, tankGroup;
+
+    function init3DViewer() {
+        const container = document.getElementById('tank-3d-container');
+        if (!container) return;
+        container.innerHTML = ''; 
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xF8FAFC);
+        camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 0, 500);
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6); dirLight.position.set(200, 500, 300); scene.add(dirLight);
+
+        tankGroup = new THREE.Group(); scene.add(tankGroup);
+        animate3D();
+    }
+
+    function animate3D() { requestAnimationFrame(animate3D); if (tankGroup) tankGroup.rotation.y += 0.005; renderer.render(scene, camera); }
+
+    function drawDynamicTank(ID, H, h1, h2, h3) {
+        if (typeof THREE === 'undefined') return;
+        if (!scene) init3DViewer();
+        while(tankGroup.children.length > 0) { tankGroup.remove(tankGroup.children[0]); }
+
+        const scale = 0.1; const r = (ID / 2) * scale; const h = H * scale;
+        const isEllipsoidal = document.getElementById('head_type')?.value === "2";
+        const headH = isEllipsoidal ? r / 2 : r / 3; 
+        const material = new THREE.MeshStandardMaterial({ color: 0x94A3B8, metalness: 0.4, roughness: 0.3, transparent: true, opacity: 0.85 });
+
+        const shell = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 32), material); tankGroup.add(shell);
+        const topHead = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), material);
+        topHead.position.y = h / 2; topHead.scale.y = headH / r; tankGroup.add(topHead);
+        const botHead = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), material);
+        botHead.rotation.x = Math.PI; botHead.position.y = -h / 2; botHead.scale.y = headH / r; tankGroup.add(botHead);
+        
+        const legCount = parseInt(document.getElementById('leg_qty')?.value || 4);
+        for(let i=0; i<legCount; i++) {
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(10, 80, 10), new THREE.MeshStandardMaterial({ color: 0x1E293B }));
+            const angle = (i / legCount) * Math.PI * 2;
+            leg.position.x = Math.cos(angle) * (r - 5); leg.position.z = Math.sin(angle) * (r - 5); leg.position.y = -(h / 2) - 30;
+            tankGroup.add(leg);
+        }
+        camera.position.z = h * 2.5 + 100;
+    }
+
+    /**
+     * ========================================================================
+     * 8. 🤖 LLAMA-3 AI INTEGRATION (WEB API)
+     * ========================================================================
+     */
+    function triggerAIAnalysis() {
+        const outBox = document.getElementById('ai_chem_out');
+        const turb = getFloat('chem_turb', 15), fe = getFloat('chem_fe', 1.5), hard = getFloat('chem_hard', 120), tds = getFloat('chem_tds', 300), ph = getFloat('chem_ph', 7.2);
+
+        outBox.innerHTML = "<b style='color: var(--warning);'>⏳ กำลังส่งข้อมูลให้ Llama-3 วิเคราะห์คุณภาพน้ำ...</b>";
+        fetch('/api/analyze_water', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({turb, fe, hard, tds, ph})
+        }).then(res => res.json()).then(data => {
+            outBox.innerHTML = data.result.replace(/\n/g, '<br>');
+        }).catch(err => {
+            outBox.innerHTML = `<span style='color:red;'>❌ API Connection Error: ${err}</span>`;
+        });
+    }
+
+    document.getElementById('chem_turb').addEventListener('change', triggerAIAnalysis);
+    document.getElementById('chem_fe').addEventListener('change', triggerAIAnalysis);
+    document.getElementById('chem_hard').addEventListener('change', triggerAIAnalysis);
+    document.getElementById('chem_tds').addEventListener('change', triggerAIAnalysis);
+    document.getElementById('chem_ph').addEventListener('change', triggerAIAnalysis);
+    document.getElementById('chem_source').addEventListener('change', triggerAIAnalysis);
+
+    /**
+     * ========================================================================
+     * 9. ⚙️ ENGINEERING CALCULATIONS
+     * ========================================================================
+     */
+    function removeRow(btn) { try { btn.parentElement.parentElement.remove(); triggerUpdate(); } catch(e) {} }
+    
+    function addNozzleRow() { 
+        try { 
+            const tbody = document.getElementById('noz-body'); const tr = document.createElement('tr'); 
+            tr.innerHTML = `<td>N${tbody.children.length + 1}</td><td><input type="text" value="ท่อเสริม" class="editable-input n-name"></td><td><input type="text" value="${global_pipe}" class="editable-input n-size"></td><td><input type="number" value="500" class="editable-input n-h"></td><td><input type="number" value="0" class="editable-input n-d"></td><td><input type="number" value="1200" class="editable-input n-p" oninput="triggerUpdate()"></td><td class="no-print"><button class="btn btn-del" onclick="removeRow(this)">X</button></td>`; 
+            tbody.appendChild(tr); triggerUpdate(); 
+        } catch(e) {} 
+    }
+
+    function drawPID(qty, size) {
+        try {
+            const svg = document.getElementById('pid-svg'); if (!svg) return;
+            svg.innerHTML = `<rect x="160" y="40" width="80" height="120" rx="20" fill="#F8FAFC" stroke="#334155" stroke-width="2"/><text x="200" y="100" text-anchor="middle" font-size="12" font-weight="bold" fill="#0F172A">FILTER TANK</text><line x1="20" y1="60" x2="160" y2="60" stroke="#333" stroke-width="3"/><polygon points="150,55 160,60 150,65" fill="#333"/><circle cx="80" cy="60" r="10" fill="#fff" stroke="#EF4444" stroke-width="2"/><text x="80" y="50" text-anchor="middle" font-size="10" fill="#EF4444" font-weight="bold">V1(Inlet)</text><line x1="160" y1="140" x2="20" y2="140" stroke="#333" stroke-width="3"/><polygon points="30,135 20,140 30,145" fill="#333"/><circle cx="80" cy="140" r="10" fill="#fff" stroke="#10B981" stroke-width="2"/><text x="80" y="130" text-anchor="middle" font-size="10" fill="#10B981" font-weight="bold">V2(Outlet)</text><line x1="50" y1="60" x2="50" y2="140" stroke="#333" stroke-width="3"/><circle cx="50" cy="100" r="10" fill="#fff" stroke="#F59E0B" stroke-width="2"/><text x="25" y="105" font-size="10" fill="#F59E0B" font-weight="bold">V3(BW)</text><line x1="110" y1="140" x2="110" y2="180" stroke="#333" stroke-width="3"/><circle cx="110" cy="160" r="10" fill="#fff" stroke="#7C3AED" stroke-width="2"/><text x="125" y="165" font-size="10" fill="#7C3AED" font-weight="bold">V4(Rinse)</text><polygon points="105,170 110,180 115,170" fill="#333"/><line x1="110" y1="60" x2="110" y2="20" stroke="#333" stroke-width="3"/><circle cx="110" cy="40" r="10" fill="#fff" stroke="#0891B2" stroke-width="2"/><text x="125" y="45" font-size="10" fill="#0891B2" font-weight="bold">V5(Drain)</text><polygon points="105,30 110,20 115,30" fill="#333"/><rect x="260" y="80" width="120" height="40" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/><text x="320" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#475569">Pipe Size: ${size}</text>`;
+            DOM.setHTML('manifold_spec', `สัญลักษณ์วาล์ว: V1=วาล์วน้ำเข้า, V2=วาล์วน้ำออก, V3=วาล์วล้างย้อน, V4=วาล์วชะล้าง, V5=วาล์วน้ำทิ้ง (รวมใช้ชุดวาล์วทั้งหมด ${qty} ตัว)`);
+        } catch(e) {}
+    }
+
+    function autoCalculateThickness() {
+        try {
+            const mat = document.getElementById('mat').value.split(','); const S = parseFloat(mat[0]); 
+            const ID = getFloat('id_v', 1200); const P = getFloat('p_v', 5) / 10; const CA = getFloat('ca', 1.0); const E = 0.85; 
+            
+            let req_s = (P * (ID / 2)) / (S * E - 0.6 * P) + CA; 
+            let req_h = (0.885 * P * ID) / (S * E - 0.1 * P) + CA;
+            
+            const std = [3, 4.5, 5, 6, 8, 9, 10, 12, 15, 16, 20, 25];
+            DOM.setVal('t_v', std.find(t => t >= req_s) || Math.ceil(req_s)); 
+            DOM.setVal('t_h', std.find(t => t >= req_h) || Math.ceil(req_h)); 
+            DOM.setVal('t_str', Math.max(6, std.find(t => t >= req_s) || Math.ceil(req_s)));
+            
+            triggerUpdate(); alert("✨ ระบบทำการปรับความหนาเหล็กให้เป็นไปตามมาตรฐานความปลอดภัยอัตโนมัติสำเร็จ!");
+        } catch(e) {}
+    }
+
+    function calcYield(ID, H_v, t_v, t_h, qty) {
+        try {
+            const shell_c = Math.PI * (ID + t_v); const shell_area_m2 = (shell_c * H_v) / 1000000;
+            const blank_dia = ID * 1.22; const head_area_m2 = Math.pow(blank_dia / 1000, 2); 
+            const total_area_needed = (shell_area_m2 + (2 * head_area_m2)) * qty;
+            const actual_part_area = (shell_area_m2 + (2 * (Math.PI * Math.pow(blank_dia / 2000, 2)))) * qty;
+
+            const area_4x8 = 2.971; const req_4x8 = Math.ceil(total_area_needed / area_4x8); 
+            const pur_4x8 = req_4x8 * area_4x8; const scrap_4x8 = pur_4x8 > 0 ? ((pur_4x8 - actual_part_area) / pur_4x8) * 100 : 0;
+            
+            const area_5x10 = 4.645; const req_5x10 = Math.ceil(total_area_needed / area_5x10); 
+            const pur_5x10 = req_5x10 * area_5x10; const scrap_5x10 = pur_5x10 > 0 ? ((pur_5x10 - actual_part_area) / pur_5x10) * 100 : 0;
+            
+            const win_4x8 = scrap_4x8 < scrap_5x10;
+            const html_4x8 = `<td class="${win_4x8 ? 'yield-winner' : ''}">${req_4x8} แผ่น</td><td class="${win_4x8 ? 'yield-winner' : ''}">${scrap_4x8.toFixed(1)}%</td>`;
+            const html_5x10 = `<td class="${!win_4x8 ? 'yield-winner' : ''}">${req_5x10} แผ่น</td><td class="${!win_4x8 ? 'yield-winner' : ''}">${scrap_5x10.toFixed(1)}%</td>`;
+
+            DOM.setHTML('calc-yield', `
+                <div style="margin-bottom:15px; color:var(--primary); font-weight:500;">พื้นที่แผ่นคลี่รวม (สำหรับ ${qty} ถัง): <b>${total_area_needed.toFixed(2)} m²</b></div>
+                <table class="yield-table" style="width:100%; border:1px solid var(--border);">
+                    <thead><tr><th style="background:#F8FAFC; color:var(--primary);">ขนาดแผ่นมาตรฐาน</th><th style="background:#F8FAFC; color:var(--primary);">จำนวนแผ่น (เบิก)</th><th style="background:#F8FAFC; color:var(--primary);">เศษทิ้ง (Scrap %)</th></tr></thead>
+                    <tbody><tr><td><b>4 x 8 ฟุต</b> (1.21x2.43m)</td>${html_4x8}</tr><tr><td><b>5 x 10 ฟุต</b> (1.52x3.04m)</td>${html_5x10}</tr></tbody>
+                </table>
+                <div style="margin-top:15px; font-weight:600; color:var(--success); background:#F0FDF4; padding:12px; border-radius:8px; border:1px solid #BBF7D0;">💡 ระบบแนะนำให้สั่งซื้อขนาด: ${win_4x8 ? '4x8 ฟุต' : '5x10 ฟุต'}</div>
+            `);
+        } catch(e) {}
+    }
+
+    function updateCostChart(dataArr) {
+        try {
+            const ctx = document.getElementById('costChart')?.getContext('2d'); if (!ctx) return;
+            if (costChartInstance) { costChartInstance.data.datasets[0].data = dataArr; costChartInstance.update(); } 
+            else { 
+                costChartInstance = new Chart(ctx, { 
+                    type: 'doughnut', 
+                    data: { labels: ['เหล็ก/แผ่นดาม','ท่อวาล์ว/แมนโฮล','ค่าแรง/เชื่อม','สี 300μm','ค่าขนส่ง','กำไร (Profit)'], datasets: [{ data: dataArr, backgroundColor: ['#0F172A','#D4AF37','#F59E0B','#7C3AED','#94A3B8','#10B981'] }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } }, cutout: '65%' } 
+                }); 
+            }
+        } catch(e) {}
+    }
+
+    function triggerUpdate() {
+        try { fullUpdate(); setStatus(false); } catch (e) { setStatus(true); manualBOQ(); }
+    }
+
+    function fullUpdate() {
+        updateTimestamp();
+        
+        let qty = 1, ID = 1200, P = 0.5, CA = 1.0, H = 1500, t_v = 6.0, t_h = 6.0, t_str = 6.0;
+        let S = 100, rho = 7.85, E = 0.85, head_h = 300, matText = "", col_type = "fishbone", wind_v = 30;
+        let A_m2 = 0, Q_m3h = 0, load_media = 0, water_load = 0;
+        let m1_h_val = 0, m2_h_val = 0, m3_h_val = 0;
+        let w_str = 0, n_noz = 0, lateral_size = "3/4\" (20 mm)";
+        let empty_w_single = 0, sys_w_shell = 0, sys_w_head = 0, sys_w_manhole = 0, sys_w_weld = 0;
+        let sys_w_leg = 0, sys_w_lug = 0;
+
+        try {
+            qty = getFloat('tank_qty', 1); DOM.setText('boq_multiplier_badge', `*ระบบคำนวณและคูณปริมาณวัสดุอัตโนมัติสำหรับ ${qty} ถัง`);
+            const matSelect = document.getElementById('mat'); matText = matSelect.options[matSelect.selectedIndex].text; 
+            const mat = matSelect.value.split(','); S = parseFloat(mat[0]); rho = parseFloat(mat[1]); 
+            col_type = document.getElementById('collection_type').value; ID = getFloat('id_v', 1200); P = getFloat('p_v', 5) / 10; 
+            CA = getFloat('ca', 1.0); H = getFloat('h_v', 1500); t_v = getFloat('t_v', 6.0); t_h = getFloat('t_h', 6.0); 
+            t_str = getFloat('t_str', 6.0); E = getFloat('ndt_rt', 0.1) === 1.0 ? 1.0 : 0.85; wind_v = getFloat('wind_v', 30); 
+            head_h = document.getElementById('head_type').value === "2" ? ID / 4 : ID / 6;
+            
+            if (ID < 600) { global_manhole_in = "8\""; global_manhole_mm = 200; } 
+            else if (ID <= 900) { global_manhole_in = "16\""; global_manhole_mm = 400; } 
+            else if (ID <= 1500) { global_manhole_in = "20\""; global_manhole_mm = 500; } 
+            else { global_manhole_in = "24\""; global_manhole_mm = 600; }
+            
+            DOM.setText('rec_manhole_badge', `💡 แนะนำขนาด Manhole: ${global_manhole_in}`); 
+            DOM.setText('np_mawp', `${P*10} BAR`); DOM.setText('np_mawp2', `${P*10} BAR`); DOM.setText('np_hydro', `${(P*13).toFixed(1)} BAR`);
+            
+            if(typeof drawDynamicTank === 'function') { drawDynamicTank(ID, H, getFloat('m1_h',300), getFloat('m2_h',400), getFloat('m3_h',200)); }
+            calcYield(ID, H, t_v, t_h, qty);
+        } catch(e) {}
+
+        let req_s = 0, req_h = 0;
+        try {
+            req_s = (P * (ID/2)) / (S * E - 0.6 * P) + CA; req_h = (0.885 * P * ID) / (S * E - 0.1 * P) + CA;
+            DOM.setHTML('calc-shell', `<b>สูตร:</b> <span style="color:var(--gold);">t = (P × R) / (S × E - 0.6 × P) + CA</span><br><b>ความหนาขั้นต่ำ: <span style="font-size:1.2em; color:var(--warning);">${req_s.toFixed(2)} mm</span></b><br><b>ใช้งานจริง:</b> <span style="font-size:1.2em; color:${t_v >= req_s ? 'var(--success)' : 'var(--danger)'};">${t_v} mm ${t_v >= req_s ? '(ผ่านเกณฑ์ ✅)' : '(ไม่ผ่าน ❌)'}</span>`);
+            DOM.setHTML('calc-head', `<b>สูตร:</b> <span style="color:var(--gold);">t = (0.885 × P × ID) / (S × E - 0.1 × P) + CA</span><br><b>ความหนาขั้นต่ำ: <span style="font-size:1.2em; color:var(--warning);">${req_h.toFixed(2)} mm</span></b><br><b>ใช้งานจริง:</b> <span style="font-size:1.2em; color:${t_h >= req_h ? 'var(--success)' : 'var(--danger)'};">${t_h} mm ${t_h >= req_h ? '(ผ่านเกณฑ์ ✅)' : '(ไม่ผ่าน ❌)'}</span>`);
+            DOM.setText('warn_s', t_v < req_s ? `⚠️ ต่ำกว่าค่าปลอดภัย` : ""); DOM.setText('warn_h', t_h < req_h ? `⚠️ ต่ำกว่าค่าปลอดภัย` : "");
+        } catch(e) {}
+
+        try {
+            A_m2 = Math.PI * Math.pow(ID / 2000, 2); Q_m3h = A_m2 * 15;
+            const manualPipe = document.getElementById('manual_pipe_size')?.value || "auto";
+            if (manualPipe === 'auto') global_pipe = ID <= 750 ? '2"' : ID <= 1050 ? '3"' : ID <= 1400 ? '4"' : '6"'; else global_pipe = manualPipe + '"'; 
+            
+            const pipe_num = parseFloat(global_pipe); const actual_v = Q_m3h / (Math.PI * Math.pow(pipe_num * 25.4 / 2000, 2) * 3600);
+            let flange_spec = pipe_num <= 2.5 ? "ANSI 150# / JIS 10K (น็อต 4 ตัว)" : pipe_num <= 4 ? "ANSI 150# (น็อต M16 x 4-8 ตัว)" : "ANSI 150# (น็อต M20 x 8 ตัว)";
+            
+            if (pipe_num <= 2.5) lateral_size = "3/4\" (20 mm)"; else if (pipe_num === 3) lateral_size = "1\" (25 mm)"; else if (pipe_num === 4) lateral_size = "1.25\" (32 mm)"; else if (pipe_num === 6) lateral_size = "1.5\" (40 mm)"; else if (pipe_num >= 8) lateral_size = "2\" (50 mm)";
+
+            const a_rate_vent = getFloat('air_rate', 60); const air_scour_m3h = A_m2 * a_rate_vent; const max_vent_flow_m3h = Math.max(Q_m3h, air_scour_m3h); 
+            const vent_area_m2 = (max_vent_flow_m3h / 3600) / 20; const vent_dia_mm = Math.sqrt((vent_area_m2 * 4) / Math.PI) * 1000;
+            
+            let vent_size_in = "1\" (25mm)";
+            if (vent_dia_mm > 25 && vent_dia_mm <= 40) vent_size_in = "1.5\" (40mm)"; else if (vent_dia_mm > 40 && vent_dia_mm <= 50) vent_size_in = "2\" (50mm)"; else if (vent_dia_mm > 50 && vent_dia_mm <= 65) vent_size_in = "2.5\" (65mm)"; else if (vent_dia_mm > 65 && vent_dia_mm <= 80) vent_size_in = "3\" (80mm)"; else if (vent_dia_mm > 80) vent_size_in = "4\" (100mm)";
+
+            DOM.setHTML('calc-pipe', `<b>อัตราการไหลของน้ำ (Q_water):</b> ${A_m2.toFixed(3)} m² × 15 m/h = ${Q_m3h.toFixed(2)} m³/h<br><b>ท่อเมนหน้างาน: <span style="color:var(--gold);">${global_pipe}</span></b> (ความเร็วของไหล: ${actual_v.toFixed(2)} m/s)<br><b>มาตรฐานหน้าแปลน:</b> <span style="color:#0EA5E9;">${flange_spec}</span><br><hr style="border:1px dashed #475569; margin:15px 0;"><h4 style="margin:5px 0; color:#FCA5A5;">🌪️ การคำนวณท่อระบายอากาศ (Air Vent Sizing)</h4>- อัตราแทนที่อากาศสูงสุด (Max Air Displacement): <b>${max_vent_flow_m3h.toFixed(2)} m³/h</b><br>- ความเร็วลมระบายออกที่ปลอดภัย (Safe Vent Velocity): <b>20 m/s</b><br>- <b>ขนาดท่อ Air Vent ขั้นต่ำ: <span style="color:var(--danger); font-size:1.1em; background:#FEE2E2; padding:4px 10px; border-radius:4px;">${vent_size_in}</span></b>`);
+            DOM.setText('rec_pipe_badge', `💡 ท่อเมน: ${global_pipe} | Air Vent: ${vent_size_in}`);
+            DOM.setHTML('pipe-suggestion-box', `📌 ท่อเมนหลัก: <b>${global_pipe}</b> | แมนโฮล: <b>${global_manhole_in}</b> | ท่อระบายอากาศ (Air Vent): <b style="color:var(--danger);">${vent_size_in}</b>`);
+
+            let m_count = 0; let n_sizes = document.querySelectorAll('.n-size'); let n_names = document.querySelectorAll('.n-name'); let n_prices = document.querySelectorAll('.n-p');
+            for(let i=0; i<n_names.length; i++) {
+                let n_val = n_names[i].value.toLowerCase();
+                if ((n_val.includes('inlet') || n_val.includes('outlet')) && n_sizes[i].value.length <= 4) n_sizes[i].value = global_pipe; 
+                else if (n_val.includes('vent') || n_val.includes('ระบายอากาศ')) n_sizes[i].value = vent_size_in.split(' ')[0]; 
+                else if (n_val.includes('manhole') || n_val.includes('แมนโฮล')) { n_sizes[i].value = global_manhole_in; m_count++; n_prices[i].value = 0; n_prices[i].disabled = true; n_prices[i].style.background = "#F1F5F9"; } 
+                else { n_prices[i].disabled = false; n_prices[i].style.background = ""; }
+            }
+            window.current_manhole_count = m_count; const t_valves = 5 * qty; DOM.setVal('in_q_valve', t_valves); drawPID(t_valves, global_pipe);
+        } catch(e) {}
+
+        try {
+            m1_h_val = getFloat('m1_h', 0); m2_h_val = getFloat('m2_h', 0); m3_h_val = getFloat('m3_h', 0);
+            const m1_v = A_m2 * (m1_h_val / 1000) * 1000; const m2_v = A_m2 * (m2_h_val / 1000) * 1000; const m3_v = A_m2 * (m3_h_val / 1000) * 1000;
+            const m1_sg = getFloat('m1_type', 1.1); load_media = (m1_v * m1_sg) + (m2_v * getFloat('m2_type', 1.6)) + (m3_v * getFloat('m3_type', 1.8)); 
+            water_load = A_m2 * (H / 1000) * 1000; 
+            
+            DOM.setHTML('media-out', `รวมปริมาตรสารกรอง: ${(m1_v+m2_v+m3_v).toFixed(0)} ลิตร | น้ำหนักสารกรองรวม: ${load_media.toFixed(0)} kg`);
+            DOM.setHTML('media-bags-out', `<b>🛍️ ประเมินจำนวนกระสอบสารกรอง (ต่อถัง 1 ใบ):</b><br>- ชั้นบนสุด: ใช้ประมาณ <b>${Math.ceil(m1_v/50)} กระสอบ</b><br>- ชั้นกลาง: ใช้ประมาณ <b>${Math.ceil((m2_v*getFloat('m2_type', 1.6))/50)} กระสอบ</b><br>- ชั้นล่าง (Support): ใช้ประมาณ <b>${Math.ceil((m3_v*getFloat('m3_type', 1.8))/50)} กระสอบ</b>`);
+            
+            const freeboard_mm = H - (m1_h_val+m2_h_val+m3_h_val); const required_freeboard = Math.max((m1_h_val+m2_h_val+m3_h_val)*0.4, 600); 
+            const fb_box = document.getElementById('freeboard-check');
+            if ((m1_h_val+m2_h_val+m3_h_val) === 0) { fb_box.style.display = 'none'; } else { 
+                fb_box.style.display = 'block';
+                if(freeboard_mm >= required_freeboard) { fb_box.style.background = '#ECFDF5'; fb_box.style.color = '#10B981'; fb_box.innerHTML = `✅ ระยะเผื่อล้างย้อน (Freeboard) ปลอดภัย: ${freeboard_mm.toFixed(0)} mm (ขั้นต่ำ ${required_freeboard.toFixed(0)} mm)`; } 
+                else { fb_box.style.background = '#FEF2F2'; fb_box.style.color = '#EF4444'; fb_box.innerHTML = `❌ คำเตือน: ระยะล้างย้อน (Freeboard) แคบเกินไป! มีเพียง ${freeboard_mm.toFixed(0)} mm (ต้องการขั้นต่ำ ${required_freeboard.toFixed(0)} mm)`; }
+            }
+
+            const softBox = document.getElementById('softener-calc-box'); const trSalt = document.getElementById('boq_tr_salt');
+            if (m1_sg === 0.85) { 
+                softBox.style.display = 'block'; trSalt.style.display = ''; DOM.setVal('boq_q_salt', qty); 
+                const resin_liters = m1_v; const salt_req_kg = resin_liters * 0.15; const brine_vol_liters = salt_req_kg / 0.1; 
+                const brine_tank_rec = [100, 200, 500, 1000, 2000].find(t => t >= brine_vol_liters) || Math.ceil(brine_vol_liters);
+                softBox.innerHTML = `<b>🟡 Cation Resin Regeneration (การล้างเรซิ่น):</b><br>- ปริมาตรเรซิ่น: ${resin_liters.toFixed(0)} ลิตร<br>- เกลือบริสุทธิ์ (NaCl) ที่ต้องใช้ล้างต่อครั้ง: <b>${salt_req_kg.toFixed(1)} kg</b><br>- ปริมาตรน้ำเกลือ 10%: ${brine_vol_liters.toFixed(0)} ลิตร<br>- <b>ขนาดถังน้ำเกลือแนะนำ (Brine Tank): <span style="font-size:1.2em;">${brine_tank_rec} ลิตร</span></b><br><i>*ระบบได้เพิ่มชุดถังดูดน้ำเกลือลงในใบ BOQ ให้อัตโนมัติแล้ว</i>`;
+            } else { softBox.style.display = 'none'; trSalt.style.display = 'none'; DOM.setVal('boq_q_salt', 0); }
+        } catch(e) {}
+
+        try {
+            if (col_type === 'plate') {
+                DOM.setText('p2-title-collection', "3. Plate Strainer Analysis (แผ่นตะแกรงดามกระดูกงู)");
+                const nozzle_density = 50; n_noz = Math.ceil(A_m2 * nozzle_density); const nozzle_pitch = Math.sqrt(1 / nozzle_density) * 1000;
+                const W_total = load_media + water_load; const uniform_q = W_total / A_m2; const span_L = (ID/1000) * 0.9;
+                const bending_moment_M = (uniform_q * Math.pow(span_L, 2)) / 8; w_str = A_m2 * t_str * rho * 1.2; 
+                const allowable_stress = 1200; const M_kg_cm = bending_moment_M * 100; const Z_req = M_kg_cm / allowable_stress; 
+                let stiffener_rec = "";
+                if(Z_req < 5) stiffener_rec = "เหล็กแบน Flat Bar 50x6 mm (Z ≈ 3.0 cm³)";
+                else if(Z_req < 10) stiffener_rec = "เหล็กแบน Flat Bar 65x9 mm (Z ≈ 6.3 cm³)";
+                else if(Z_req < 20) stiffener_rec = "เหล็กแบน Flat Bar 75x12 mm หรือ C-Channel 75x40";
+                else if(Z_req < 50) stiffener_rec = "เหล็กรางน้ำ C-Channel 100x50x20x3.2 mm (Z ≈ 20 cm³)";
+                else stiffener_rec = "H-Beam หรือ I-Beam ขนาด 100-150 mm ขึ้นไป";
+                
+                DOM.setHTML('calc-strainer', `<div style="color:var(--gold); font-size:1.1em; margin-bottom:10px;"><b>[A] การคำนวณหัวกรอง (Nozzle Density)</b></div>- พื้นที่หน้าตัดถัง (A) = ${A_m2.toFixed(3)} m²<br>- มาตรฐานความหนาแน่น = ${nozzle_density} หัวกรอง / m²<br>- จำนวนที่ต้องใช้ = ${A_m2.toFixed(3)} × ${nozzle_density} = <b><span style="color:var(--gold); font-size:1.2em;">${n_noz} ชิ้น</span></b><br>- ระยะเจาะตาราง (Pitch) = <b>${nozzle_pitch.toFixed(0)} × ${nozzle_pitch.toFixed(0)} mm</b><br><hr style="border:1px dashed #334155; margin:15px 0;"><div style="color:var(--gold); font-size:1.1em; margin-bottom:10px;"><b>[B] การออกแบบเหล็กดามกระดูกงู (Stiffener Design)</b></div>- น้ำหนักกดทับรวม (W_total) = ${load_media.toFixed(0)} (สารกรอง) + ${water_load.toFixed(0)} (น้ำ) = ${W_total.toFixed(0)} kg<br>- น้ำหนักกระจายแผ่ (Uniform Load, q) = W_total / A = <b>${uniform_q.toFixed(0)} kg/m²</b><br>- ช่วงพาดอิสระ (Span, L) ≈ 90% ของ ID = ${span_L.toFixed(2)} m<br>- สูตร Bending Moment (M) = (q × L²) / 8<br>- M = (${uniform_q.toFixed(0)} × ${span_L.toFixed(2)}²) / 8 = <b><span style="color:#FCA5A5; font-size:1.2em;">${bending_moment_M.toFixed(1)} kg·m</span></b><br><br><div style="background:rgba(255,255,255,0.05); padding:15px; border-left:4px solid var(--gold);"><b>🛠️ Recommendation:</b><br>- Section Modulus ขั้นต่ำที่ต้องการ (Z_req) = <b>${Z_req.toFixed(2)} cm³</b><br>- <span style="color:#7DD3FC; font-size:1.1em;">สเปคแนะนำ: ดามกระดูกงูด้วย <b>${stiffener_rec}</b></span></div>`);
+                DOM.setVal('i_name_3', "3. แผ่นตะแกรงดามเหล็ก (Strainer Plate)"); DOM.setVal('i_name_4', "4. หัวกรองน้ำ (Filter Nozzles)"); DOM.setText('lbl_unit_3', "kg"); DOM.setText('lbl_unit_4', "ชิ้น");
+                DOM.setHTML('nozzle-qty-out', `หัวกรอง Strainer ที่ต้องเจาะติดตั้งบนแผ่นตะแกรง: <span style="font-size:1.2em;">${n_noz} ชิ้น</span> (ต่อ 1 ถัง)`);
+            } else {
+                DOM.setText('p2-title-collection', "3. Fishbone AWWA B100 Standard (ระบบก้างปลา)");
+                const pipe_num_override = parseFloat(global_pipe); const R_header = (pipe_num_override * 25.4) / 2; 
+                let t_len = 0; let l_c = 0; 
+                for (let x=0; x < ID/2; x+=150) { let l = Math.sqrt(Math.pow(ID/2, 2) - Math.pow(x, 2)) - R_header - 20; if (l > 50) { let p = x === 0 ? 2 : 4; l_c += p; t_len += l * p; } }
+                
+                let lat_id_mm = 20;
+                if (pipe_num_override <= 1.5) lat_id_mm = 15; else if (pipe_num_override <= 2.5) lat_id_mm = 20; else if (pipe_num_override === 3) lat_id_mm = 25; else if (pipe_num_override === 4) lat_id_mm = 32; else if (pipe_num_override === 6) lat_id_mm = 40; else if (pipe_num_override >= 8) lat_id_mm = 50;
+
+                const A_lat_total = l_c * (Math.PI * Math.pow(lat_id_mm/2, 2)); const target_ratio = 2.20; const A_ori_req = A_lat_total / target_ratio; 
+                const a_hole_3mm = Math.PI * Math.pow(1.5, 2); const total_holes = Math.ceil(A_ori_req / a_hole_3mm); const avg_pitch = t_len / (total_holes / 2); const hydraulic_ratio = A_lat_total / (total_holes * a_hole_3mm); 
+                w_str = (t_len / 1000) * 1.5; n_noz = l_c;
+                
+                let ratio_status = "";
+                if(hydraulic_ratio >= 2.0) ratio_status = `<span style="color:#86EFAC;">(✅ ผ่านเกณฑ์ AWWA น้ำฉีดออกเท่ากันทุกรู)</span>`;
+                else ratio_status = `<span style="color:#FCA5A5;">(❌ ไม่ผ่านเกณฑ์ ท่อเล็กไป!<br><b style="color:var(--warning);">วิธีแก้:</b> กลับไปหน้า 1 เลือกบังคับท่อเมนให้ใหญ่ขึ้น)</span>`;
+                
+                DOM.setHTML('calc-strainer', `<div style="color:var(--gold); font-size:1.1em; margin-bottom:10px;"><b>[A] ข้อมูลท่อก้านแขนง (Lateral Properties)</b></div>- ขนาดท่อแขนง = ${lateral_size}<br>- จำนวนก้านทั้งหมด = ${l_c} ก้าน (ความยาวก้านรวมกัน ${t_len.toFixed(0)} mm)<br>- พื้นที่หน้าตัดก้านรวม (A_lateral) = <b>${A_lat_total.toFixed(0)} mm²</b><br><hr style="border:1px dashed #334155; margin:15px 0;"><div style="color:var(--gold); font-size:1.1em; margin-bottom:10px;"><b>[B] การคำนวณรูเจาะตามมาตรฐาน AWWA (Orifice Calc)</b></div>- กฎ Hydraulic Ratio: สัดส่วน (A_lateral / A_orifice) ต้อง ≥ 2.0<br>- กำหนดพื้นที่รูเจาะรวม (A_orifice) = <b>${A_ori_req.toFixed(0)} mm²</b><br>- เจาะด้วยสว่านขนาด Ø 3 mm (พื้นที่ ${a_hole_3mm.toFixed(2)} mm²/รู)<br>- จำนวนรูเจาะทั้งหมด = ${A_ori_req.toFixed(0)} / ${a_hole_3mm.toFixed(2)} = <b><span style="color:var(--gold); font-size:1.2em;">${total_holes.toLocaleString()} รู</span></b><br>- สัดส่วนความปลอดภัยจริง (Actual Ratio): <b>${hydraulic_ratio.toFixed(2)}</b> ${ratio_status}<br><hr style="border:1px dashed #334155; margin:15px 0;"><div style="color:#7DD3FC; font-size:1.05em; margin-bottom:10px;"><b>🛠️ สรุปแบบสั่งทำ (Fabrication Guide)</b></div>- ตัดท่อก้านแขนง ${l_c} ก้าน, เจาะ 2 แถวขนานกัน ทำมุม 45 องศาคว่ำลงพื้น<br>- <b>ระยะห่างรูเจาะ (Hole Pitch) = <u>เจาะรูทุกๆ ~${avg_pitch.toFixed(1)} mm</u></b>`);
+                DOM.setVal('i_name_3', "3. ท่อเมนกลางก้างปลา (Main Header)"); DOM.setVal('i_name_4', "4. ท่อก้านแขนงเจาะรู (Laterals)"); DOM.setText('lbl_unit_3', "kg"); DOM.setText('lbl_unit_4', "ก้าน");
+                DOM.setHTML('nozzle-qty-out', `ระบบก้างปลาใช้ท่อก้านแขนงทั้งหมด <span style="font-size:1.2em;">${n_noz} ก้าน</span> ขนาด <b>${lateral_size}</b> (ต่อ 1 ถัง)`);
+            }
+        } catch(e) {}
+
+        try {
+            sys_w_shell = (Math.PI * (ID + t_v) * H * t_v * rho) / 1000000 * qty; 
+            sys_w_head = (2 * Math.PI * Math.pow(ID * 1.22 / 2, 2) * t_h * rho) / 1000000 * qty; 
+            const req_man = global_manhole_mm * Math.sqrt((0.33 * P) / (S * E)) + CA;
+            sys_w_manhole = ((Math.PI * Math.pow((global_manhole_mm + 100) / 2, 2) * req_man * rho / 1000000) + (Math.PI * global_manhole_mm * 200 * t_v * rho / 1000000)) * 1.8 * window.current_manhole_count * qty;
+            sys_w_weld = ((Math.PI * ID * 2) + H) / 1000 * (t_v * t_v * 0.008) * qty;
+
+            const leg_q = getFloat('leg_qty', 4); const leg_t = Math.max(t_v, 6);
+            const leg_girth_m = (ID < 1000) ? 0.25 : (ID <= 1500) ? 0.30 : 0.40; const leg_h_m = 0.8;
+            const w_per_leg = leg_girth_m * leg_h_m * (leg_t/1000) * 7850; 
+            sys_w_leg = w_per_leg * leg_q * qty; 
+            sys_w_lug = (ID <= 1200) ? (20 * qty) : (35 * qty);
+
+            empty_w_single = (sys_w_shell / qty) + (sys_w_head / qty) + w_str + (sys_w_leg / qty) + (sys_w_lug / qty) + (sys_w_manhole / qty);
+            const cg_y_m = (((sys_w_shell / qty) * (H / 2)) + ((sys_w_head / qty / 2) * (H + head_h * 0.33))) / empty_w_single / 1000;
+            const req_t_lug = (empty_w_single * 2 * 9.81) / (S * 55);
+            DOM.setHTML('calc-lug', `น้ำหนักถังเปล่า (Empty Weight): <b>${empty_w_single.toFixed(0)} kg</b><br>ความหนาหูหิ้วขั้นต่ำ: <b><span style="color:var(--warning);">${req_t_lug.toFixed(2)} mm</span></b> (S.F. 2.0)<br>จุด C.G. ศูนย์ถ่วง: <b><span style="color:var(--gold);">${cg_y_m.toFixed(2)} เมตร</span></b> (วัดจากรอยเชื่อมฝาล่าง)`);
+            DOM.setHTML('calc-manhole', `<b>สูตร:</b> <span style="color:var(--gold);">t = d × √(C × P / (S × E)) + CA</span><br>ความหนาฝาแมนโฮลขั้นต่ำ (Required): <b><span style="color:var(--warning);">${req_man.toFixed(2)} mm</span></b>`);
+            
+            const A_req = global_manhole_mm * req_s; const A_avail = global_manhole_mm * (t_v - req_s);
+            if (A_avail >= A_req) { DOM.setHTML('calc-repad', `<span style="color:var(--success); font-weight:bold;">✅ สรุป: ความหนาผนังถังเพียงพอ ไม่ต้องเชื่อมแผ่นดาม (Repad)</span>`); } 
+            else { DOM.setHTML('calc-repad', `พื้นที่สูญเสีย (A_req): ${A_req.toFixed(1)} mm² | ผนังชดเชยได้ (A_avail): ${A_avail.toFixed(1)} mm²<br><span style="color:#FEF3C7; font-weight:bold;">⚠️ ต้องเชื่อมแผ่นดามคอท่อ (Reinforcement Pad) หนา ${t_v} mm วงนอก ${Math.max(global_manhole_mm+(A_req-A_avail)/t_v, global_manhole_mm*1.5).toFixed(0)} mm</span>`); }
+            
+            let process = "SMAW / GMAW"; let gas = "CO2 หรือ Argon Mix"; let amps = "100-130A"; let volts = "18-22V";
+            if (matText.includes("SUS")) { process="GTAW/GMAW"; gas="Argon 100%"; if(t_v<=3){amps="70-90A"; volts="12-14V";} else if(t_v<=6){amps="100-140A"; volts="14-16V";} else{amps="150-200A"; volts="16-20V";} } 
+            else { if(t_v<=3){amps="80-100A"; volts="18-20V";} else if(t_v<=6){amps="120-160A"; volts="20-24V";} else{amps="160-220A"; volts="24-28V";} }
+            DOM.setHTML('wps-guide', `<b>วัสดุโครงสร้างหลัก:</b> ${matText}<br><b>ความหนาใช้งาน (t):</b> ${t_v.toFixed(1)} mm<br><b>กระบวนการเชื่อม (Process):</b> ${process} | <b>แก๊สปกคลุม:</b> ${gas}<br><b>กระแสไฟ (Amps):</b> ${amps} &nbsp;|&nbsp; <b>แรงดันอาร์ค (Volts):</b> ${volts}`);
+            
+            const total_water_v_liters = ((Math.PI * Math.pow(ID/2, 2) * H) + (Math.PI * Math.pow(ID, 3) / 12)) / 1000000;
+            const water_weight_single = total_water_v_liters; const hydro_w_single = empty_w_single + water_weight_single; const fill_time_min = total_water_v_liters / 50; 
+            DOM.setHTML('calc-hydro', `1. ถังเปล่า = <b>${empty_w_single.toFixed(0)} kg</b><br>2. น้ำหนักสูงสุดขณะเทส = <span style="color:#6EE7B7; font-weight:bold;">${hydro_w_single.toFixed(0)} kg</span><br><b>แรงดันปั๊มทดสอบรอยรั่ว:</b> <span style="color:#6EE7B7; font-weight:bold;">${(P*13).toFixed(2)} Bar</span><br><b>⏳ ประเมินเวลาเติมน้ำเต็มถัง:</b> ~${Math.ceil(fill_time_min)} นาที`);
+            
+            const load_per_leg = (empty_w_single + water_weight_single + load_media) / getFloat('leg_qty', 4); const base_plate_side = Math.sqrt(load_per_leg / 15);
+            DOM.setHTML('calc-leg-support', `น้ำหนักกดทับรวมขณะใช้งาน: <b>${(empty_w_single+water_weight_single+load_media).toFixed(0)} kg</b><br>น้ำหนักกดทับต่อขา: <b>${load_per_leg.toFixed(0)} kg</b><br>แผ่นเพลทฐาน ขั้นต่ำ: <b>${base_plate_side.toFixed(0)} x ${base_plate_side.toFixed(0)} mm</b>`);
+            
+            const ndt_factor = getFloat('ndt_rt', 0.1); const seam_len_m = ((Math.PI * ID * 2) + H) / 1000;
+            DOM.setHTML('calc-ndt', `ความยาวแนวเชื่อมรวม: <b>${seam_len_m.toFixed(2)} เมตร</b><br>ระยะที่ต้องถ่าย X-Ray: <b><span style="color:#FCA5A5; font-size:1.2em;">${(seam_len_m * ndt_factor).toFixed(2)} เมตร</span></b>`);
+            
+            DOM.setText('vol-info-full', `ความจุน้ำสุทธิรวมต่อถัง: ${total_water_v_liters.toFixed(1)} ลิตร`);
+            let vRows = ""; for (let i=0; i<=(H+2*head_h); i+=100) { let cur_v = (Math.PI * Math.pow(ID/2, 2) * i) / 1000000; let zone = i < head_h ? "ฝาล่าง (Bottom Head)" : i > (H+head_h) ? "ฝาบน (Top Head)" : "ตัวถัง (Shell)"; vRows += `<tr><td>${i/10}</td><td>${cur_v.toFixed(1)}</td><td>${zone}</td></tr>`; }
+            DOM.setHTML('vol-body', vRows);
+
+            const wind_force_kg = (0.613 * Math.pow(wind_v, 2) * (((ID + 2*t_v) / 1000) * (H / 1000)) * 0.8) / 9.81; 
+            const overturning_moment = wind_force_kg * ((H / 1000) / 2);
+            let bolt_rec = "4 - M16"; if(overturning_moment > 1000) bolt_rec = "4 - M20"; if(overturning_moment > 3000) bolt_rec = "4 - M24"; if(overturning_moment > 6000) bolt_rec = "8 - M24";
+            DOM.setHTML('calc-wind', `แรงลมปะทะกระบอกถัง (Wind Force) = ~${wind_force_kg.toFixed(0)} kgf<br><b>โมเมนต์พลิกคว่ำ (Overturning Moment) = <span style="color:var(--gold); font-size:1.2em;">${overturning_moment.toFixed(0)} kg-m</span></b><br><span style="color:#D8B4FE;">🛠️ <b>แนะนำพุกยึดฐานราก (Anchor Bolt Design):</b> ขั้นต่ำ <b>${bolt_rec}</b></span>`);
+
+            const d = new Date(); const revNum = document.getElementById('proj_rev')?.value || "00";
+            DOM.setText('rep_proj', document.getElementById('proj_name')?.value); DOM.setText('rep_date', d.toLocaleDateString('th-TH'));
+            DOM.setText('qc_proj_1', document.getElementById('proj_name')?.value); DOM.setText('qc_date_1', d.toLocaleDateString('th-TH'));
+            DOM.setText('qc_proj_2', document.getElementById('proj_name')?.value); DOM.setText('qc_date_2', d.toLocaleDateString('th-TH'));
+            DOM.setText('rep_eng', document.getElementById('eng_name')?.value);
+            DOM.setText('rep_p', `${P*10} BAR`); DOM.setText('rep_id', `${ID} mm`); DOM.setText('rep_h', `${H} mm`); DOM.setText('rep_mat', matText);
+            DOM.setText('rep_ca', `${CA} mm`); DOM.setText('rep_rev', revNum); 
+            DOM.setText('rep_req_s', req_s.toFixed(2)); DOM.setText('rep_act_s', t_v.toFixed(2)); DOM.setText('rep_req_h', req_h.toFixed(2)); DOM.setText('rep_act_h', t_h.toFixed(2));
+
+            const ndtText = document.getElementById('ndt_rt'); const qc_ndt_val = ndtText ? ndtText.options[ndtText.selectedIndex].text.split('-')[1].trim() : "Spot 10%";
+            DOM.setText('qc_ndt', qc_ndt_val); DOM.setText('qc_hydro', `${(P*13).toFixed(2)} Bar`);
+            DOM.setText('ht_proj', document.getElementById('proj_name')?.value); DOM.setText('ht_date', d.toLocaleDateString('th-TH'));
+            DOM.setText('ht_dp', `${(P*10).toFixed(2)} BAR`); DOM.setText('ht_tp', `${(P*13).toFixed(2)} BAR`);
+            DOM.setText('np_serial', `QW-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}-01`);
+        } catch(e) {}
+
+        try {
+            const eq_L = getFloat('hz_len',20) + (getFloat('hz_elbow',6)*1.5) + (getFloat('hz_tee',2)*2.0); const d_in = parseFloat(global_pipe) * 25.4;
+            const hf = 10.67 * Math.pow(Q_m3h/3600, 1.852) / (Math.pow(150, 1.852) * Math.pow(d_in/1000, 4.8704)) * eq_L;
+            const tdh_sys = getFloat('hz_static',2.5) + hf + ((m1_h_val+m2_h_val+m3_h_val)/1000*0.5);
+            DOM.setHTML('calc-hazen', `ความยาวท่อเทียบเท่า (Eq. Length): <b>${eq_L.toFixed(1)} m</b><br>Pipe Friction Loss (Hazen-Williams): <b>${hf.toFixed(2)} m</b><br><b>Total Dynamic Head (TDH): <span style="color:#7DD3FC; font-size:1.2em;">${tdh_sys.toFixed(1)} เมตร</span></b>`);
+            DOM.setHTML('pump-power-out', `⚡ สเปคปั๊มน้ำแนะนำ: ${((Q_m3h*tdh_sys)/(367*0.65)).toFixed(2)} kW (~${Math.ceil(((Q_m3h*tdh_sys)/(367*0.65))*1.341)} HP) (TDH = ${tdh_sys.toFixed(1)}m)`);
+            const a_rate = getFloat('air_rate',60); const air_m3 = (A_m2 * a_rate) / 60; const b_pressure = Math.ceil(((H/1000) * 9.81 + 10) / 10) * 10;
+            DOM.setHTML('calc-blower', `พื้นที่หน้าตัดถัง: <b>${A_m2.toFixed(2)} m²</b><br>ปริมาณลมที่ต้องการ: <b>${air_m3.toFixed(1)} m³/min</b> (อัตรา ${a_rate} m/h)<br>แรงดันลมต้านทาน: <b>${b_pressure} kPa</b><br><b>แนะนำสเปค Roots Blower: <span style="color:#67E8F9; font-size:1.2em;">${Math.ceil(air_m3)} m³/min @ ${b_pressure} kPa</span></b>`);
+            DOM.setVal('boq_q_blower', ID >= 1200 ? qty : 0);
+            
+            const chem_turb = getFloat('chem_turb',15); const chem_fe = getFloat('chem_fe',1.5); const chem_tds = getFloat('chem_tds',300); const chem_ph = getFloat('chem_ph',7.2);
+            let ai_rec = `<ul style="margin:0; padding-left:20px;">`;
+            if (chem_turb > 20) ai_rec += `<li>⚠️ <b>ความขุ่นสูง:</b> ใช้ทรายกรอง 2 ชั้น (Dual Media)</li>`; else ai_rec += `<li>✅ <b>ความขุ่นปกติ:</b> ใช้ทรายกรองได้ปกติ</li>`;
+            if (chem_fe > 0.5) ai_rec += `<li>⚠️ <b>สนิมเหล็กสูง:</b> แนะนำสารกรอง Birm และฟีดคลอรีน</li>`; else ai_rec += `<li>✅ <b>สนิมเหล็กต่ำ:</b> ไม่ต้องกำจัดเหล็ก</li>`;
+            if (getFloat('chem_hard',120) > 50) ai_rec += `<li>⚠️ <b>หินปูนสูง:</b> แนะนำต่อชุด Softener</li>`;
+            if (chem_tds > 500) ai_rec += `<li>🚨 <b>TDS สูง (${chem_tds} mg/L):</b> บังคับติดตั้งระบบ RO ท้ายระบบ!</li>`;
+            if (chem_ph < 6.5) ai_rec += `<li>⚠️ <b>น้ำเป็นกรด (pH ${chem_ph}):</b> แนะนำฟีดโซดาไฟ (NaOH)</li>`;
+            ai_rec += `</ul>`; DOM.setHTML('ai_chem_out', ai_rec);
+            const c_ppm = getFloat('dose_ppm',2.0); const c_days = getFloat('dose_days',15); const dosing_rate_L_hr = (Q_m3h * c_ppm) / (10 * 10); 
+            const rec_tank = [50,100,200,500,1000].find(t => t >= (dosing_rate_L_hr * 24 * c_days)) || Math.ceil(dosing_rate_L_hr * 24 * c_days);
+            DOM.setHTML('calc-dosing', `ความสามารถปั๊มโดส: <b><span style="color:var(--gold); font-size:1.2em;">${Math.max(1,dosing_rate_L_hr).toFixed(1)} L/hr</span></b><br>ขนาดถังเก็บสารเคมี (PE Tank): <b><span style="color:var(--gold); font-size:1.2em;">${rec_tank} ลิตร</span></b> (สำรองได้ ${c_days} วัน)`);
+            DOM.setVal('boq_q_dose', (chem_fe > 0.5 || chem_ph < 6.5 || chem_turb > 20) ? qty : 0);
+        } catch(e) {}
+
+        try {
+            DOM.setVal('in_w_shell', sys_w_shell.toFixed(0)); DOM.setVal('in_w_head', sys_w_head.toFixed(0)); DOM.setVal('in_w_str', (w_str*qty).toFixed(0));
+            DOM.setVal('in_w_manhole', sys_w_manhole.toFixed(0)); DOM.setVal('in_w_leg', sys_w_leg.toFixed(0)); DOM.setVal('in_w_lug', sys_w_lug.toFixed(0)); 
+            DOM.setVal('in_q_noz', n_noz*qty); DOM.setVal('in_w_weld', sys_w_weld.toFixed(0));
+            const total_paint_area = (Math.PI * ID/1000 * H/1000 + 2 * Math.pow(ID/1000, 2)) * 2 * qty; DOM.setVal('in_area_val', total_paint_area.toFixed(1));
+            DOM.setText('insight_primer', (total_paint_area * 0.2166 / 3.785).toFixed(1)); DOM.setText('insight_top', (total_paint_area * 0.4333 / 3.785).toFixed(1));
+            DOM.setHTML('om_spare_parts', `<tr><td style="text-align:center;">1</td><td>ปะเก็นยางแมนโฮล ขนาด ${global_manhole_in}</td><td style="text-align:center; font-weight:bold; color:var(--danger);">${window.current_manhole_count*qty*2} แผ่น</td></tr><tr><td style="text-align:center;">2</td><td>ปะเก็นยางหน้าแปลนท่อเมน ขนาด ${global_pipe}</td><td style="text-align:center; font-weight:bold; color:var(--danger);">${10*qty} แผ่น</td></tr><tr><td style="text-align:center;">3</td><td>วาล์วปีกผีเสื้อ ขนาด ${global_pipe} พร้อมด้ามโยก</td><td style="text-align:center; font-weight:bold; color:var(--danger);">${qty} ตัว</td></tr><tr><td style="text-align:center;">4</td><td>เกจวัดแรงดัน 0-10 Bar ชนิดมีน้ำมัน</td><td style="text-align:center; font-weight:bold; color:var(--danger);">${2*qty} ตัว</td></tr>${col_type === 'plate' ? `<tr><td style="text-align:center;">5</td><td>หัวกรองน้ำพลาสติก (Strainer) ABS 0.2mm</td><td style="text-align:center; font-weight:bold; color:var(--danger);">${Math.ceil(n_noz*0.1)} ชิ้น</td></tr>` : ''}`);
+            manualBOQ();
+        } catch(e) { manualBOQ(); }
+    }
+
+    function manualBOQ() {
+        try {
+            const qty = getFloat('tank_qty', 1); let sys_noz_val = 0; let dyn_html = ""; let n_idx = 1;
+            document.querySelectorAll('#noz-body tr').forEach(tr => {
+                let nm = tr.querySelector('.n-name').value; let sz = tr.querySelector('.n-size').value; let pr = getFloat(tr.querySelector('.n-p').id) || parseFloat(tr.querySelector('.n-p').value) || 0;
+                if (!nm.toLowerCase().includes('manhole') && !nm.includes('แมนโฮล')) {
+                    let item_tot = pr * qty; sys_noz_val += item_tot;
+                    dyn_html += `<tr><td style="padding-left:20px;"><b>5.${n_idx}</b> ${nm} ขนาด ${sz}</td><td style="text-align:center; font-weight:600;">${qty} ชุด</td><td style="text-align:center;">${pr.toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td style="text-align:right; font-weight:600;">${item_tot.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>`;
+                    n_idx++;
+                }
+            });
+            DOM.setHTML('boq-dynamic-nozzles', dyn_html);
+            
+            const arr = [
+                {id:'shell', q:getFloat('in_w_shell'), p:getFloat('boq_p_shell',195)}, {id:'head', q:getFloat('in_w_head'), p:getFloat('boq_p_head',195)},
+                {id:'str', q:getFloat('in_w_str'), p:getFloat('boq_p_str',195)}, {id:'manhole', q:getFloat('in_w_manhole'), p:getFloat('boq_p_manhole',195)},
+                {id:'noz', q:getFloat('in_q_noz'), p:getFloat('boq_p_noz',150)}, {id:'leg', q:getFloat('in_w_leg'), p:getFloat('boq_p_leg',195)},
+                {id:'lug', q:getFloat('in_w_lug'), p:getFloat('boq_p_lug',195)}, {id:'weld', q:getFloat('in_w_weld'), p:getFloat('boq_p_weld',250)},
+                {id:'valve', q:getFloat('in_q_valve'), p:getFloat('boq_p_valve',2500)}, {id:'salt', q:getFloat('boq_q_salt'), p:getFloat('boq_p_salt',18500)},
+                {id:'blower', q:getFloat('boq_q_blower'), p:getFloat('boq_p_blower',35000)}, {id:'dose', q:getFloat('boq_q_dose'), p:getFloat('boq_p_dose',12500)}
+            ];
+            
+            let sum_mat = 0, sum_acc = 0, sum_w = 0;
+            arr.forEach(item => { 
+                let t = item.q * item.p; DOM.setText('boq_t_' + item.id, t.toLocaleString(undefined, {minimumFractionDigits: 2})); 
+                if (['shell', 'head', 'str', 'manhole'].includes(item.id)) sum_mat += t; else sum_acc += t; 
+                if (['shell', 'head', 'str', 'manhole', 'leg', 'lug', 'weld'].includes(item.id)) sum_w += item.q; 
+            });
+            
+            sum_acc += sys_noz_val; DOM.setText('w_total_display', sum_w.toLocaleString(undefined, {minimumFractionDigits: 2}) + " kg"); DOM.setVal('in_w_lb', sum_w.toFixed(2));
+            const tot_lb = sum_w * getFloat('in_lb_rate', 55); const tot_pt = getFloat('in_area_val') * getFloat('in_pt_rate', 550); const ship = getFloat('in_ship_rate', 7500); const prof_pct = getFloat('in_profit_rate', 30);
+            DOM.setText('tot_lb', tot_lb.toLocaleString(undefined, {minimumFractionDigits: 2})); DOM.setText('tot_pt', tot_pt.toLocaleString(undefined, {minimumFractionDigits: 2}));
+            
+            const sum_all = sum_mat + sum_acc + tot_lb + tot_pt + ship; const grand = sum_all * (1 + (prof_pct / 100));
+            DOM.setText('grand_total', "฿ " + grand.toLocaleString(undefined, {minimumFractionDigits: 2})); updateCostChart([sum_mat, sum_acc, tot_lb, tot_pt, ship, grand - sum_all]);
+            
+            const td = Math.ceil(sum_w / 40); DOM.setText('insight_days', td); DOM.setText('insight_truck', sum_w < 1500 ? "รถกระบะ 4 ล้อ" : sum_w < 5000 ? "รถบรรทุก 6 ล้อ" : "รถบรรทุก 10 ล้อ / เทรลเลอร์");
+            let d1 = Math.max(1, Math.ceil(td * 0.15)); let d2 = Math.max(1, Math.ceil(td * 0.50)); let d3 = Math.max(1, Math.ceil(td * 0.10)); let d4 = Math.max(1, Math.ceil(td * 0.20));
+            DOM.setHTML('auto-schedule', `<div style="background:#E2E8F0; padding:15px; border-radius:8px; margin-bottom:10px;"><b>รวมระยะเวลาผลิตประเมิน: <span style="color:var(--danger); font-size:1.2em;">${d1+d2+d3+d4+1} วัน</span></b></div><ul style="padding-left:20px; margin-top:5px; color:#475569;"><li>วันที่ 1-${d1}: เตรียมวัสดุ ตัดแผ่น ม้วนตัวถัง และขึ้นรูปฝา</li><li>วันที่ ${d1+1}-${d1+d2}: ประกอบโครงสร้างและงานเชื่อม (Fabrication)</li><li>วันที่ ${d1+d2+1}-${d1+d2+d3}: ตรวจสอบรอยเชื่อม NDT และทดสอบแรงดัน Hydrotest</li><li>วันที่ ${d1+d2+d3+1}-${d1+d2+d3+d4}: ขัดทำความสะอาดและพ่นสี</li></ul>`);
+            
+            const ID = getFloat('id_v', 1200); const Q_roi = Math.PI * Math.pow(ID / 2000, 2) * 15; const save_mo = (Q_roi * getFloat('roi_hrs', 12) * (getFloat('roi_city', 25) - getFloat('roi_raw', 5))) * 30;
+            let r_htm = `กำลังผลิตน้ำของระบบรวม: <b>${(Q_roi * getFloat('roi_hrs', 12)).toFixed(1)} คิว/วัน</b><br>`;
+            if (save_mo > 0) r_htm += `สามารถประหยัดค่าน้ำประปาได้: <b><span style="color:var(--success); font-size:1.1em;">${save_mo.toLocaleString(undefined, {minimumFractionDigits: 2})} บาท/เดือน</span></b><br>มูลค่าการลงทุนในโครงการนี้ (CAPEX): ${grand.toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br><br><div style="background:#F0FDF4; padding:20px; border-radius:10px; text-align:center; border:1px solid #BBF7D0;"><b>ระยะเวลาคืนทุน (Payback Period):</b><br><span style="color:var(--success); font-size:2em; font-weight:700;">${(grand / save_mo).toFixed(1)} เดือน</span></div>`; 
+            else r_htm += `<span style="color:var(--danger); font-weight:bold;">⚠️ คำเตือนทางธุรกิจ: ค่าน้ำประปาเดิมต้องแพงกว่าต้นทุนการสูบน้ำดิบ จึงจะเกิดความคุ้มค่าในการลงทุนติดตั้งระบบนี้</span>`; 
+            DOM.setHTML('roi_output', r_htm); 
+            syncQuoteData(false);
+        } catch(e) { setStatus(true); }
+    }
+
+    function syncQuoteData(forceSync = false) {
+        if (!forceSync && !document.getElementById('auto_quote_text')?.checked) return;
+        try {
+            DOM.setText('q_proj_name', document.getElementById('proj_name')?.value || "..."); 
+            DOM.setVal('q_sign_eng', document.getElementById('eng_name')?.value || "Chakrit");
+            
+            const ID = getFloat('id_v', 1200); const H = getFloat('h_v', 1500); const tank_qty = getFloat('tank_qty', 1);
+            const matSelect = document.getElementById('mat'); const mat = matSelect ? matSelect.options[matSelect.selectedIndex].text : ""; 
+            
+            if (forceSync || document.getElementById('auto_quote_text')?.checked) {
+                DOM.setText('q_tank_title', tank_qty === 1 ? "ชุดถังกรองน้ำอุตสาหกรรม (Industrial Pressure Filter)" : `ชุดระบบกรองน้ำอุตสาหกรรม ${tank_qty} ขั้นตอน`); 
+                DOM.setText('q_tank_qty_label', `${tank_qty} Set`);
+                let tank_str = `- ถังกรองแรงดันขนาดเส้นผ่านศูนย์กลาง Ø${ID} mm x ความสูง ${H} mm จำนวน ${tank_qty} ใบ\n- วัสดุโครงสร้าง: ${mat} (ทำสีกันสนิมและสารเคมี Epoxy ชนิดหนาพิเศษ 300 ไมครอน)\n- จุดต่อหน้าแปลนท่อหลักขนาด ${global_pipe} และช่องคนลอด (Manhole) ขนาด ${global_manhole_in} จำนวน ${window.current_manhole_count} จุด\n- รวมถึงชุดวาล์วปีกผีเสื้อสำหรับควบคุมหน้าถังขนาด ${global_pipe} ครบชุด\n`;
+                if(getFloat('boq_q_blower') > 0) tank_str += `- รวมระบบเครื่องเป่าลมล้างย้อน (Air Scour Roots Blower)\n`; 
+                if(getFloat('boq_q_dose') > 0) tank_str += `- รวมชุดปั๊มฟีดเคมีปรับสภาพน้ำ (Chemical Dosing Station)\n`;
+                if(getFloat('boq_q_salt') > 0) tank_str += `- รวมชุดถังเตรียมน้ำเกลือล้างเรซิ่น (Brine Tank System)`;
+                
+                DOM.setVal('q_spec_tank', tank_str); 
+                const mediaOut = document.getElementById('media-out'); 
+                DOM.setVal('q_spec_media', `สารกรองบรรจุสำหรับ ${tank_qty} ถัง:\n` + (mediaOut ? mediaOut.innerText.replace(/<br>/g, '\n').replace(/<[^>]*>?/gm, '') : ""));
+            }
+            
+            const grand_total_text = document.getElementById('grand_total')?.innerText || "0.00"; 
+            DOM.setText('q_final_price', grand_total_text); DOM.setText('q_subtotal', grand_total_text); DOM.setText('q_grand_total', grand_total_text);
+            const g_num = parseFloat(grand_total_text.replace(/[^0-9.-]+/g,"")) || 0;
+            
+            if (forceSync || document.getElementById('q_terms_text')?.value.includes("งวดที่ 1:")) { 
+                const ta = document.getElementById('q_terms_text'); 
+                ta.value = `1. ยืนราคาการเสนอขาย 30 วัน\n2. กำหนดระยะเวลาส่งมอบงาน 45-60 วัน\n3. เงื่อนไขการชำระเงิน (แบ่งเป็น 3 งวด):\n   - งวดที่ 1 (มัดจำ 50%): ${(g_num * 0.5).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท\n   - งวดที่ 2 (ก่อนจัดส่ง 40%): ${(g_num * 0.4).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท\n   - งวดที่ 3 (หลังติดตั้ง 10%): ${(g_num * 0.1).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท`; 
+                ta.style.height = ''; ta.style.height = ta.scrollHeight + 'px'; 
+            }
+            
+            DOM.setHTML('om_spec_box', `<b>ขนาดถัง (Vessel Size):</b> Ø${ID} mm x H${H} mm<br><b>วัสดุ (Material):</b> ${mat}<br><b>แรงดันทำงาน (Operating Pressure):</b> 2.0 - 4.0 BAR<br><b>อัตราการผลิตน้ำ (Flow Rate):</b> ~${((Math.PI * Math.pow(ID/2000, 2)) * 15).toFixed(1)} m³/h`);
+            DOM.setHTML('om_bw_plan', `<b>อัตราล้างย้อน (Backwash Flowrate):</b> ${((Math.PI * Math.pow(ID/2000, 2)) * 35).toFixed(1)} m³/h<br>ควรทำการล้างย้อนด้วยน้ำเปล่า 10-15 นาที (และเป่าลมกวนสารกรองก่อน หากมี Blower) โดยกระทำทุกๆ 24-48 ชั่วโมง`);
+            DOM.setHTML('om_maintenance_table', `<tr><td style="border:1px solid #FFEDD5; text-align:center;"><b>รายวัน</b></td><td style="border:1px solid #FFEDD5;">ตรวจสอบแรงดันตกคร่อม (Pressure Drop) หน้าถังและหลังถัง หากต่างกันเกิน 1 Bar ให้ล้างย้อนทันที</td></tr><tr><td style="border:1px solid #FFEDD5; text-align:center;"><b>ทุก 6 เดือน</b></td><td style="border:1px solid #FFEDD5;">เปิดฝาแมนโฮล (Manhole) บนเพื่อตรวจสอบระดับสารกรอง หากพร่องให้เติมเพิ่มให้ได้ระดับเดิม</td></tr><tr><td style="border:1px solid #FFEDD5; text-align:center;"><b>1 - 1.5 ปี</b></td><td style="border:1px solid #FFEDD5;">เปลี่ยนสารกรอง (Filter Media) ทั้งหมด เพื่อฟื้นฟูประสิทธิภาพการกรองให้น้ำใสสะอาดตามมาตรฐาน</td></tr>`);
+        } catch(e) { console.error(e); }
+    }
+</script>
+</body>
+</html>
